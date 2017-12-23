@@ -13,19 +13,19 @@ namespace ErnstNetworking
 {
     class EN_Server
     {
-        static EN_Server server;
+        static EN_Server SERVER;
         static void Main(string[] args)
         {
-            server = new EN_Server();
+            SERVER = new EN_Server();
         }
 
 
-        UdpClient client;
+        UdpClient server;
         IPEndPoint source;
 
         public EN_Server()
         {
-            client = new UdpClient(EN_ServerSettings.PORT);
+            server = new UdpClient(EN_ServerSettings.PORT);
             source = new IPEndPoint(IPAddress.Any, 0);
 
 
@@ -39,14 +39,14 @@ namespace ErnstNetworking
                 Recieve();
             }
 
-            client.Close();
+            server.Close();
         }
 
         private void Recieve()
         {
-            if (client.Available > 0)
+            if (server.Available > 0)
             {
-                byte[] bytes = client.Receive(ref source);
+                byte[] bytes = server.Receive(ref source);
 
                 if (bytes.Length > 0)
                 {
