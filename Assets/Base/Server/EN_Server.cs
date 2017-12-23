@@ -22,17 +22,21 @@ namespace ErnstNetworking
 
         UdpClient server;
         IPEndPoint source;
+        Dictionary<int, IPEndPoint> clients;
+
 
         public EN_Server()
         {
             server = new UdpClient(EN_ServerSettings.PORT);
             source = new IPEndPoint(IPAddress.Any, 0);
-
+            clients = new Dictionary<int, IPEndPoint>();
 
             bool run = true;
             while (run == true)
             {
 #if !UNITY_EDITOR && !UNITY_5 && !UNITY_STANDALONE
+                // Quit if we pressed Escape
+                // TODO: Disconnect all clients and maybe some cleanup (?)
                 if ((Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)){ run = false; }
 #endif
 
@@ -51,30 +55,32 @@ namespace ErnstNetworking
                 if (bytes.Length > 0)
                 {
 #if !UNITY_EDITOR && !UNITY_5 && !UNITY_STANDALONE
-                    //Console.WriteLine(Encoding.ASCII.GetString(bytes));
-
                     // Get & translate first 4 bytes
                     EN_PACKET_TYPE packet_type = EN_Protocol.BytesToType(bytes);
 
-                    // Print
-                    Console.WriteLine(source.ToString() + ": " + TranslateMessage(packet_type, bytes));
+                    // Print packet info
+                    Console.WriteLine(source.ToString() + ": " + TranslateMessage(source, packet_type, bytes));
 #endif
                 }
             }
         }
 
-        private string TranslateMessage(EN_PACKET_TYPE type, byte[] bytes)
+        private string TranslateMessage(IPEndPoint source, EN_PACKET_TYPE type, byte[] bytes)
         {
             string s = "";
             if (type == EN_PACKET_TYPE.CONNECT)
             {
                 EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
                 s = "CONNECTED!";
+                //TODO: add source to clients list
+                clients.Add(clients.Count, source);
             }
             if (type == EN_PACKET_TYPE.DISCONNECT)
             {
                 EN_PacketDisconnect packet = EN_Protocol.BytesToObject<EN_PacketDisconnect>(bytes);
                 s = "DISCONNECTED!";
+                //TODO: remove source from clients list
+                //clients.Remove()
             }
             if (type == EN_PACKET_TYPE.MESSAGE)
             {
