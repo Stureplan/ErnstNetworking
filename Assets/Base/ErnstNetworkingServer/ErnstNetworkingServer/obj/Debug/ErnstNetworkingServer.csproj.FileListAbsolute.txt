@@ -1,0 +1,7 @@
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\ErnstNetworkingServer\ErnstNetworkingServer\bin\Debug\ErnstNetworkingServer.exe.config
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\ErnstNetworkingServer\ErnstNetworkingServer\bin\Debug\ErnstNetworkingServer.exe
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\ErnstNetworkingServer\ErnstNetworkingServer\bin\Debug\ErnstNetworkingServer.pdb
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\ErnstNetworkingServer\ErnstNetworkingServer\obj\Debug\ErnstNetworkingServer.csprojResolveAssemblyReference.cache
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\ErnstNetworkingServer\ErnstNetworkingServer\obj\Debug\ErnstNetworkingServer.csproj.CoreCompileInputs.cache
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\ErnstNetworkingServer\ErnstNetworkingServer\obj\Debug\ErnstNetworkingServer.exe
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\ErnstNetworkingServer\ErnstNetworkingServer\obj\Debug\ErnstNetworkingServer.pdb
