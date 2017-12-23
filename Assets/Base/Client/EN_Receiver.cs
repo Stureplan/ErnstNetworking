@@ -4,7 +4,7 @@ using UnityEngine;
 using System.Net.Sockets;
 using System.Net;
 
-using ErnstNetworking.Settings;
+using ErnstNetworking.Server;
 
 public class EN_Receiver : MonoBehaviour 
 {

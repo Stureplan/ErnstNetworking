@@ -1,4 +1,4 @@
-﻿namespace ErnstNetworking.Settings
+﻿namespace ErnstNetworking.Server
 {
     public static class EN_ServerSettings
     {
