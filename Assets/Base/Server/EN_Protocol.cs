@@ -9,8 +9,10 @@ namespace ErnstNetworking.Protocol
     {
         CONNECT = 0,
         DISCONNECT,
-        MESSAGE
+        MESSAGE,
+        CONNECT_CONFIRMED
     }
+
 
     struct EN_PacketConnect
     {
@@ -36,7 +38,7 @@ namespace ErnstNetworking.Protocol
         {
             EN_PacketConnect packet;
             packet.packet_type = EN_PACKET_TYPE.CONNECT;
-            packet.packet_data = 666;
+            packet.packet_data = -1;
 
             client.Connect(target);
 
@@ -51,7 +53,7 @@ namespace ErnstNetworking.Protocol
         
         public static void SendText(UdpClient client, string msg)
         {
-            byte[] b1 = ObjectToBytes(2);
+            byte[] b1 = ObjectToBytes((int)EN_PACKET_TYPE.MESSAGE);
             byte[] b2 = StringToBytes(msg);
 
             byte[] bytes = new byte[b1.Length + b2.Length];

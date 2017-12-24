@@ -1,7 +1,7 @@
-C:\Users\linus.axelsson3\Documents\GitHub\ErnstNetworking\Assets\Base\Server\bin\Debug\Server.exe.config
-C:\Users\linus.axelsson3\Documents\GitHub\ErnstNetworking\Assets\Base\Server\bin\Debug\Server.exe
-C:\Users\linus.axelsson3\Documents\GitHub\ErnstNetworking\Assets\Base\Server\bin\Debug\Server.pdb
-C:\Users\linus.axelsson3\Documents\GitHub\ErnstNetworking\Assets\Base\Server\obj\Debug\Server.csprojResolveAssemblyReference.cache
-C:\Users\linus.axelsson3\Documents\GitHub\ErnstNetworking\Assets\Base\Server\obj\Debug\Server.csproj.CoreCompileInputs.cache
-C:\Users\linus.axelsson3\Documents\GitHub\ErnstNetworking\Assets\Base\Server\obj\Debug\Server.exe
-C:\Users\linus.axelsson3\Documents\GitHub\ErnstNetworking\Assets\Base\Server\obj\Debug\Server.pdb
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\Assets\Base\Server\bin\Debug\Server.exe.config
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\Assets\Base\Server\bin\Debug\Server.exe
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\Assets\Base\Server\bin\Debug\Server.pdb
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\Assets\Base\Server\obj\Debug\Server.csprojResolveAssemblyReference.cache
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\Assets\Base\Server\obj\Debug\Server.csproj.CoreCompileInputs.cache
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\Assets\Base\Server\obj\Debug\Server.exe
+C:\Users\Ernst\Documents\Unity\ErnstNetworking\Assets\Base\Server\obj\Debug\Server.pdb

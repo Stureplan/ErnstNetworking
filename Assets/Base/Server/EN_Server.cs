@@ -11,6 +11,7 @@ using ErnstNetworking.Protocol;
 
 namespace ErnstNetworking
 {
+#if !UNITY_EDITOR && !UNITY_5 && !UNITY_STANDALONE
     class EN_Server
     {
         static EN_Server SERVER;
@@ -34,11 +35,9 @@ namespace ErnstNetworking
             bool run = true;
             while (run == true)
             {
-#if !UNITY_EDITOR && !UNITY_5 && !UNITY_STANDALONE
                 // Quit if we pressed Escape
                 // TODO: Disconnect all clients and maybe some cleanup (?)
                 if ((Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)){ run = false; }
-#endif
 
                 Recieve();
             }
@@ -54,13 +53,11 @@ namespace ErnstNetworking
 
                 if (bytes.Length > 0)
                 {
-#if !UNITY_EDITOR && !UNITY_5 && !UNITY_STANDALONE
                     // Get & translate first 4 bytes
                     EN_PACKET_TYPE packet_type = EN_Protocol.BytesToType(bytes);
 
                     // Print packet info
                     Console.WriteLine(source.ToString() + ": " + TranslateMessage(source, packet_type, bytes));
-#endif
                 }
             }
         }
@@ -74,6 +71,8 @@ namespace ErnstNetworking
                 s = "CONNECTED!";
                 //TODO: add source to clients list
                 clients.Add(clients.Count, source);
+
+                ConfirmConnection(source, clients.Count);
             }
             if (type == EN_PACKET_TYPE.DISCONNECT)
             {
@@ -95,5 +94,18 @@ namespace ErnstNetworking
 
             return s;
         }
+
+        private void ConfirmConnection(IPEndPoint source, int data)
+        {
+            // 
+            EN_PacketConnect packet;
+            packet.packet_type = EN_PACKET_TYPE.CONNECT_CONFIRMED;
+            packet.packet_data = data;
+
+            byte[] bytes = EN_Protocol.ObjectToBytes(packet);
+
+            server.Send(bytes, bytes.Length, source);
+        }
     }
+#endif
 }
