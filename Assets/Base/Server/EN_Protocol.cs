@@ -13,6 +13,17 @@ namespace ErnstNetworking.Protocol
         CONNECT_CONFIRMED,
         TRANSFORM
     }
+
+    struct EN_ClientInfo
+    {
+        public EN_ClientInfo(int i, string n)
+        {
+            id = i;
+            name = n;
+        }
+        public int id;
+        public string name;
+    }
     
     struct EN_TransformData
     {

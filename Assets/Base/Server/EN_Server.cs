@@ -24,6 +24,7 @@ namespace ErnstNetworking
         UdpClient server;
         IPEndPoint source;
         Dictionary<int, IPEndPoint> clients;
+        List<byte[]> packet_stack;
 
 
         public EN_Server()
@@ -31,6 +32,7 @@ namespace ErnstNetworking
             server = new UdpClient(EN_ServerSettings.PORT);
             source = new IPEndPoint(IPAddress.Any, 0);
             clients = new Dictionary<int, IPEndPoint>();
+            packet_stack = new List<byte[]>();
 
             bool run = true;
             while (run == true)
@@ -77,7 +79,10 @@ namespace ErnstNetworking
                 s = name + " CONNECTED!";
                 clients.Add(clients.Count, source);
 
+                BroadcastStack(source);
                 ConfirmConnection(packet, name);
+
+                //TODO: Resend old messages (keep a stack of byte[] and re-send all in order to this IP)
             }
             if (type == EN_PACKET_TYPE.DISCONNECT)
             {
@@ -109,6 +114,8 @@ namespace ErnstNetworking
             Buffer.BlockCopy(b2, 0, bytes, b1.Length, b2.Length);
 
             BroadcastPacket(bytes);
+
+            packet_stack.Add(bytes);
         }
 
         private void BroadcastPacket(byte[] bytes)
@@ -116,6 +123,15 @@ namespace ErnstNetworking
             for (int i = 0; i < clients.Count; i++)
             {
                 server.Send(bytes, bytes.Length, clients[i]);
+            }
+        }
+
+        private void BroadcastStack(IPEndPoint client)
+        {
+            // Re-broadcast all old messages
+            for (int i = 0; i < packet_stack.Count; i++)
+            {
+                server.Send(packet_stack[i], packet_stack[i].Length, client);
             }
         }
     }

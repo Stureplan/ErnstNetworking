@@ -79,7 +79,7 @@ public class EN_Client : MonoBehaviour
             Buffer.BlockCopy(bytes, 8, message, 0, message.Length);
             string name = EN_Protocol.BytesToString(message);
 
-            AddClient(name);
+            AddClient(name, packet.packet_client_id);
 
             //TODO: Find out if WE are the client that should be updated -V
             //EN_Protocol.CLIENT_ID = packet.packet_client_id;
@@ -92,14 +92,14 @@ public class EN_Client : MonoBehaviour
        // client.Send(ObjectToBytes(packet), )
     }
 
-    private void AddClient(string n)
+    private void AddClient(string n, int id)
     {
         clients.Add(n);
 
         string s = "";
         for (int i = 0; i < clients.Count; i++)
         {
-            s += clients[i];
+            s += clients[i] + ", ID:" + id.ToString();
             s += '\n';
         }
 
