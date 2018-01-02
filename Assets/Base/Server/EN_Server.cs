@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
 using System.Net;
 using ErnstNetworking.Server;
@@ -20,7 +19,7 @@ namespace ErnstNetworking
         }
 
 
-        UdpClient server;
+        UdpClient udp_server;
         IPEndPoint source;
         Dictionary<int, IPEndPoint> clients;
         List<byte[]> packet_stack;
@@ -28,29 +27,29 @@ namespace ErnstNetworking
 
         public EN_Server()
         {
-            server = new UdpClient(EN_ServerSettings.PORT);
+            udp_server = new UdpClient(EN_ServerSettings.PORT);
             source = new IPEndPoint(IPAddress.Any, 0);
             clients = new Dictionary<int, IPEndPoint>();
             packet_stack = new List<byte[]>();
 
-            bool run = true;
-            while (run == true)
+            while (true)
             {
                 // Quit if we pressed Escape
                 // TODO: Disconnect all clients and maybe some cleanup (?)
-                if ((Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)){ run = false; }
+                if ((Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)){ break; }
 
-                Recieve();
+                RecieveUDP();
+                RecieveTCP();
             }
 
-            server.Close();
+            udp_server.Close();
         }
 
-        private void Recieve()
+        private void RecieveUDP()
         {
-            if (server.Available > 0)
+            if (udp_server.Available > 0)
             {
-                byte[] bytes = server.Receive(ref source);
+                byte[] bytes = udp_server.Receive(ref source);
 
                 if (bytes.Length > 0)
                 {
@@ -61,6 +60,11 @@ namespace ErnstNetworking
                     Console.WriteLine(source.Address.ToString() + ": " + TranslateMessage(source, packet_type, bytes));
                 }
             }
+        }
+
+        private void RecieveTCP()
+        {
+
         }
 
         private string TranslateMessage(IPEndPoint source, EN_PACKET_TYPE type, byte[] bytes)
@@ -137,7 +141,7 @@ namespace ErnstNetworking
         {
             for (int i = 0; i < clients.Count; i++)
             {
-                server.Send(bytes, bytes.Length, clients[i]);
+                udp_server.Send(bytes, bytes.Length, clients[i]);
             }
         }
 
@@ -146,7 +150,7 @@ namespace ErnstNetworking
             // Re-broadcast all old messages
             for (int i = 0; i < packet_stack.Count; i++)
             {
-                server.Send(packet_stack[i], packet_stack[i].Length, client);
+                udp_server.Send(packet_stack[i], packet_stack[i].Length, client);
             }
         }
     }

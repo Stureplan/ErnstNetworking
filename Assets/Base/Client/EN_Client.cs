@@ -24,7 +24,7 @@ public class EN_Client : MonoBehaviour
     private bool connected = false;
 
     // Client list (connected players)
-    private List<string> clients;
+    private Dictionary<Guid, string> clients;
 
     // UI Stuff
     public Text text_clients;
@@ -46,7 +46,7 @@ public class EN_Client : MonoBehaviour
     /*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
         Constantly send updates (translate/rotate etc)
         -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
-    private IEnumerator Send(float interval)
+    private IEnumerator SendUDP(float interval)
     {
         while (true)
         {
@@ -56,7 +56,15 @@ public class EN_Client : MonoBehaviour
         }
     }
 
-    private IEnumerator Recieve()
+
+    private void SendTCP(byte[] bytes)
+    {
+        // client.Send(ObjectToBytes(packet), )
+    }
+
+
+
+    private IEnumerator ReceiveUDP()
     {
         while (true)
         {
@@ -75,6 +83,11 @@ public class EN_Client : MonoBehaviour
         }
     }
 
+    private void ReceiveTCP()
+    {
+
+    }
+
     private void TranslateMessage(EN_PACKET_TYPE type, byte[] bytes)
     {
         if (type == EN_PACKET_TYPE.CONNECT)
@@ -89,25 +102,20 @@ public class EN_Client : MonoBehaviour
             {
                 name += " (you)";
             }
-
-            AddClient(name, packet.packet_client_id);
+            
+            AddClient(packet.packet_client_guid, packet.packet_client_id, name);
         }
     }
 
-    private void SendPacket(EN_TransformData data)
-    {
 
-       // client.Send(ObjectToBytes(packet), )
-    }
-
-    private void AddClient(string n, int id)
+    private void AddClient(Guid guid, int id, string n)
     {
-        clients.Add(n + "\tID: " +id.ToString());
+        clients.Add(guid,n + "\tID: " +id.ToString());
 
         string s = "";
-        for (int i = 0; i < clients.Count; i++)
+        foreach(KeyValuePair<Guid, string> item in clients)
         {
-            s += clients[i];
+            s += item.Value;
             s += '\n';
         }
 
@@ -120,14 +128,14 @@ public class EN_Client : MonoBehaviour
         server = new IPEndPoint(IPAddress.Parse(EN_ServerSettings.HOSTNAME), EN_ServerSettings.PORT);
         //client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 2000);
 
-        clients = new List<string>();
+        clients = new Dictionary<Guid, string>();
 
         EN_ClientSettings.CLIENT_NAME = text_name.text;
         EN_ClientSettings.CLIENT_GUID = Guid.NewGuid();
 
         EN_Protocol.Connect(client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID);
-        StartCoroutine(Send(EN_ClientSettings.SEND_INTERVAL));
-        StartCoroutine(Recieve());
+        StartCoroutine(SendUDP(EN_ClientSettings.SEND_INTERVAL));
+        StartCoroutine(ReceiveUDP());
 
         connected = true;
     }

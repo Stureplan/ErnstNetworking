@@ -41,7 +41,8 @@ namespace ErnstNetworking.Protocol
     struct EN_PacketDisconnect
     {
         public EN_PACKET_TYPE   packet_type;
-        public int packet_client_id;
+        public int              packet_client_id;
+        public Guid             packet_client_guid;
     }
 
     struct EN_PacketMessage
