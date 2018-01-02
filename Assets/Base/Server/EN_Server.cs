@@ -57,7 +57,7 @@ namespace ErnstNetworking
                     EN_PACKET_TYPE packet_type = EN_Protocol.BytesToType(bytes);
 
                     // Print packet info
-                    Console.WriteLine(source.ToString() + ": " + TranslateMessage(source, packet_type, bytes));
+                    Console.WriteLine(source.Address.ToString() + ": " + TranslateMessage(source, packet_type, bytes));
                 }
             }
         }
@@ -67,24 +67,28 @@ namespace ErnstNetworking
             string s = "";
             if (type == EN_PACKET_TYPE.CONNECT)
             {
-                EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
-                s = "CONNECTED!";
-                //TODO: add source to clients list
+                EN_PacketConnect packet;
+                packet.packet_type = EN_PACKET_TYPE.CONNECT_CONFIRMED;
+                packet.packet_client_id = clients.Count;
+                byte[] message = new byte[bytes.Length - 4 - 4];
+                Buffer.BlockCopy(bytes, 8, message, 0, message.Length);
+                string name = Encoding.ASCII.GetString(message);
+
+                s = name + " CONNECTED!";
                 clients.Add(clients.Count, source);
 
-                ConfirmConnection(source, clients.Count);
+                ConfirmConnection(packet, name);
             }
             if (type == EN_PACKET_TYPE.DISCONNECT)
             {
                 EN_PacketDisconnect packet = EN_Protocol.BytesToObject<EN_PacketDisconnect>(bytes);
                 s = "DISCONNECTED!";
                 //TODO: remove source from clients list
-                //clients.Remove()
             }
             if (type == EN_PACKET_TYPE.MESSAGE)
             {
                 EN_PacketMessage packet;
-                packet.packet_type = EN_Protocol.BytesToType(bytes);
+                packet.packet_type = EN_PACKET_TYPE.MESSAGE;
 
                 byte[] message = new byte[bytes.Length-4];
                 Buffer.BlockCopy(bytes, 4, message, 0, message.Length);
@@ -95,16 +99,24 @@ namespace ErnstNetworking
             return s;
         }
 
-        private void ConfirmConnection(IPEndPoint source, int data)
+        private void ConfirmConnection(EN_PacketConnect packet, string name)
         {
-            // 
-            EN_PacketConnect packet;
-            packet.packet_type = EN_PACKET_TYPE.CONNECT_CONFIRMED;
-            packet.packet_data = data;
+            byte[] b1 = EN_Protocol.ObjectToBytes(packet);
+            byte[] b2 = EN_Protocol.StringToBytes(name);
 
-            byte[] bytes = EN_Protocol.ObjectToBytes(packet);
+            byte[] bytes = new byte[b1.Length + b2.Length];
+            Buffer.BlockCopy(b1, 0, bytes, 0, b1.Length);
+            Buffer.BlockCopy(b2, 0, bytes, b1.Length, b2.Length);
 
-            server.Send(bytes, bytes.Length, source);
+            BroadcastPacket(bytes);
+        }
+
+        private void BroadcastPacket(byte[] bytes)
+        {
+            for (int i = 0; i < clients.Count; i++)
+            {
+                server.Send(bytes, bytes.Length, clients[i]);
+            }
         }
     }
 #endif

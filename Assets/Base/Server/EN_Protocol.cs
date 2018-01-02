@@ -10,14 +10,21 @@ namespace ErnstNetworking.Protocol
         CONNECT = 0,
         DISCONNECT,
         MESSAGE,
-        CONNECT_CONFIRMED
+        CONNECT_CONFIRMED,
+        TRANSFORM
     }
-
+    
+    struct EN_TransformData
+    {
+        public float tX; public float tY; public float tZ;
+        public float rX; public float rY; public float rZ;
+    }
 
     struct EN_PacketConnect
     {
         public EN_PACKET_TYPE   packet_type;
-        public int              packet_data;
+        public int              packet_client_id;
+        // ...invisible name string <---
     }
 
     struct EN_PacketDisconnect
@@ -34,15 +41,23 @@ namespace ErnstNetworking.Protocol
 
     public class EN_Protocol
     {
-        public static void Connect(UdpClient client, IPEndPoint target)
+        public static int CLIENT_ID = -1;
+
+        public static void Connect(UdpClient client, IPEndPoint target, string name)
         {
             EN_PacketConnect packet;
             packet.packet_type = EN_PACKET_TYPE.CONNECT;
-            packet.packet_data = -1;
+            packet.packet_client_id = -1;
+
+            byte[] b1 = ObjectToBytes(packet);
+            byte[] b2 = StringToBytes(name);
+
+            byte[] bytes = new byte[b1.Length + b2.Length];
+            Buffer.BlockCopy(b1, 0, bytes, 0, b1.Length);
+            Buffer.BlockCopy(b2, 0, bytes, b1.Length, b2.Length);
 
             client.Connect(target);
-
-            Send(client, packet);
+            client.Send(bytes, bytes.Length);
         }
 
         public static void Send(UdpClient client, object msg)
@@ -75,15 +90,29 @@ namespace ErnstNetworking.Protocol
             return s;
         }
 
-        public static byte[] ObjectToBytes(object str)
+        public static byte[] ObjectToBytes(object o)
         {
-            int size = Marshal.SizeOf(str);
+            int size = Marshal.SizeOf(o);
 
             byte[] arr = new byte[size];
-            System.IntPtr ptr = Marshal.AllocHGlobal(size);
-
-            Marshal.StructureToPtr(str, ptr, true);
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+            
+            Marshal.StructureToPtr(o, ptr, true);
             Marshal.Copy(ptr, arr, 0, size);
+            Marshal.FreeHGlobal(ptr);
+            
+            return arr;
+        }
+
+        public static byte[] ObjectToBytes(object o, int skip)
+        {
+            int size = Marshal.SizeOf(o);
+
+            byte[] arr = new byte[size];
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+
+            Marshal.StructureToPtr(o, ptr, true);
+            Marshal.Copy(ptr, arr, skip, size);
             Marshal.FreeHGlobal(ptr);
 
             return arr;
