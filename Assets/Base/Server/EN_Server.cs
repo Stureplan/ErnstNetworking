@@ -70,9 +70,9 @@ namespace ErnstNetworking
                 EN_PacketConnect packet;
                 packet.packet_type = EN_PACKET_TYPE.CONNECT_CONFIRMED;
                 packet.packet_client_id = clients.Count;
-                byte[] message = new byte[bytes.Length - 4 - 4];
+                byte[] message = new byte[bytes.Length - 8];
                 Buffer.BlockCopy(bytes, 8, message, 0, message.Length);
-                string name = Encoding.ASCII.GetString(message);
+                string name = EN_Protocol.BytesToString(message);
 
                 s = name + " CONNECTED!";
                 clients.Add(clients.Count, source);
