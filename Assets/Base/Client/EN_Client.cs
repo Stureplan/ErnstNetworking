@@ -16,12 +16,17 @@ using ErnstNetworking.Protocol;
 
 public class EN_Client : MonoBehaviour
 {
+    // This client (PC)
     private UdpClient client;
+
+    // Target connection
     private IPEndPoint server;
     private bool connected = false;
 
+    // Client list (connected players)
     private List<string> clients;
 
+    // UI Stuff
     public Text text_clients;
     public Text text_name;
 
@@ -86,9 +91,6 @@ public class EN_Client : MonoBehaviour
             }
 
             AddClient(name, packet.packet_client_id);
-
-            //TODO: Find out if WE are the client that should be updated -V
-            //EN_Protocol.CLIENT_ID = packet.packet_client_id;
         }
     }
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Net.Sockets;
 using System.Net;
 using ErnstNetworking.Server;
@@ -97,12 +96,13 @@ namespace ErnstNetworking
                 // Add connect request to the stack of important messages
                 packet_stack.Add(bytes);
 
-                s = name + " CONNECTED!";
+                s = name + " connected.";
             }
             if (type == EN_PACKET_TYPE.DISCONNECT)
             {
                 EN_PacketDisconnect packet = EN_Protocol.BytesToObject<EN_PacketDisconnect>(bytes);
-                s = "DISCONNECTED!";
+
+                s = " disconnected.";
                 //TODO: remove source from clients list
             }
             if (type == EN_PACKET_TYPE.MESSAGE)
@@ -113,7 +113,7 @@ namespace ErnstNetworking
                 byte[] message = new byte[bytes.Length-4];
                 Buffer.BlockCopy(bytes, 4, message, 0, message.Length);
                 packet.packet_data = message;
-                s = Encoding.ASCII.GetString(packet.packet_data);
+                s = EN_Protocol.BytesToString(packet.packet_data);
             }
 
             return s;
