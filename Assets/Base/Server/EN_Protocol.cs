@@ -10,7 +10,6 @@ namespace ErnstNetworking.Protocol
         CONNECT = 0,
         DISCONNECT,
         MESSAGE,
-        CONNECT_CONFIRMED,
         TRANSFORM
     }
 
@@ -35,6 +34,7 @@ namespace ErnstNetworking.Protocol
     {
         public EN_PACKET_TYPE   packet_type;
         public int              packet_client_id;
+        public Guid             packet_client_guid;
         // ...invisible name string <---
     }
 
@@ -52,13 +52,12 @@ namespace ErnstNetworking.Protocol
 
     public class EN_Protocol
     {
-        public static int CLIENT_ID = -1;
-
-        public static void Connect(UdpClient client, IPEndPoint target, string name)
+        public static void Connect(UdpClient client, IPEndPoint target, string name, Guid guid)
         {
             EN_PacketConnect packet;
             packet.packet_type = EN_PACKET_TYPE.CONNECT;
             packet.packet_client_id = -1;
+            packet.packet_client_guid = guid;
 
             byte[] b1 = ObjectToBytes(packet);
             byte[] b2 = StringToBytes(name);

@@ -16,8 +16,9 @@ using ErnstNetworking.Protocol;
 
 public class EN_Client : MonoBehaviour
 {
-    UdpClient client;
-    IPEndPoint server;
+    private UdpClient client;
+    private IPEndPoint server;
+    private bool connected = false;
 
     private List<string> clients;
 
@@ -31,7 +32,10 @@ public class EN_Client : MonoBehaviour
 
     private void OnDestroy()
     {
-        client.Close();
+        if (connected)
+        {
+            client.Close();
+        }
     }
 
     /*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -68,16 +72,18 @@ public class EN_Client : MonoBehaviour
 
     private void TranslateMessage(EN_PACKET_TYPE type, byte[] bytes)
     {
-        if (type == EN_PACKET_TYPE.CONNECT_CONFIRMED)
+        if (type == EN_PACKET_TYPE.CONNECT)
         {
             // We connected and want to establish which client we are
-            EN_PacketConnect packet;
-            packet.packet_type = EN_PACKET_TYPE.CONNECT_CONFIRMED;
-            packet.packet_client_id = BitConverter.ToInt32(bytes, 4);
+            EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
 
-            byte[] message = new byte[bytes.Length - 8];
-            Buffer.BlockCopy(bytes, 8, message, 0, message.Length);
+            byte[] message = new byte[bytes.Length - 4 - 4 - 16];
+            Buffer.BlockCopy(bytes, 4+4+16, message, 0, message.Length);
             string name = EN_Protocol.BytesToString(message);
+            if (packet.packet_client_guid.Equals(EN_ClientSettings.CLIENT_GUID) == true)
+            {
+                name += " (you)";
+            }
 
             AddClient(name, packet.packet_client_id);
 
@@ -94,12 +100,12 @@ public class EN_Client : MonoBehaviour
 
     private void AddClient(string n, int id)
     {
-        clients.Add(n);
+        clients.Add(n + "\tID: " +id.ToString());
 
         string s = "";
         for (int i = 0; i < clients.Count; i++)
         {
-            s += clients[i] + ", ID:" + id.ToString();
+            s += clients[i];
             s += '\n';
         }
 
@@ -115,8 +121,12 @@ public class EN_Client : MonoBehaviour
         clients = new List<string>();
 
         EN_ClientSettings.CLIENT_NAME = text_name.text;
-        EN_Protocol.Connect(client, server, EN_ClientSettings.CLIENT_NAME);
+        EN_ClientSettings.CLIENT_GUID = Guid.NewGuid();
+
+        EN_Protocol.Connect(client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID);
         StartCoroutine(Send(EN_ClientSettings.SEND_INTERVAL));
         StartCoroutine(Recieve());
+
+        connected = true;
     }
 }

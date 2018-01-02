@@ -69,20 +69,35 @@ namespace ErnstNetworking
             string s = "";
             if (type == EN_PACKET_TYPE.CONNECT)
             {
-                EN_PacketConnect packet;
-                packet.packet_type = EN_PACKET_TYPE.CONNECT_CONFIRMED;
+                EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
                 packet.packet_client_id = clients.Count;
-                byte[] message = new byte[bytes.Length - 8];
-                Buffer.BlockCopy(bytes, 8, message, 0, message.Length);
+
+                byte[] message = new byte[bytes.Length - 8 - 16];
+                Buffer.BlockCopy(bytes, 8 + 16, message, 0, message.Length);
                 string name = EN_Protocol.BytesToString(message);
 
-                s = name + " CONNECTED!";
                 clients.Add(clients.Count, source);
 
+                // Resend older important messages from before
                 BroadcastStack(source);
-                ConfirmConnection(packet, name);
 
-                //TODO: Resend old messages (keep a stack of byte[] and re-send all in order to this IP)
+                // Setup an ID to replace the old -1 ID from the packet
+                byte[] newID = new byte[4];
+                newID = BitConverter.GetBytes(clients.Count);
+                for (int i = 0; i < 4; i++)
+                {
+                    // Good ol-fashioned byte swap to insert the new ID
+                    byte b = newID[i];
+                    bytes[4 + i] = b;
+                }
+
+                // Send out the connection packet to the rest of the clients
+                BroadcastPacket(bytes);
+
+                // Add connect request to the stack of important messages
+                packet_stack.Add(bytes);
+
+                s = name + " CONNECTED!";
             }
             if (type == EN_PACKET_TYPE.DISCONNECT)
             {
