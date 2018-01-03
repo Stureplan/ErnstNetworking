@@ -129,7 +129,6 @@ public class EN_Client : MonoBehaviour
     {
         if (type == EN_TCP_PACKET_TYPE.CONNECT)
         {
-            //Debug.Log("CONNECT");
             // Someone connected and we want to establish who it is
             EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
 
@@ -142,6 +141,10 @@ public class EN_Client : MonoBehaviour
             }
 
             AddClient(packet.packet_client_guid, name);
+        }
+        if (type == EN_TCP_PACKET_TYPE.GAME_STATE)
+        {
+            EN_PacketGameState packet = EN_Protocol.BytesToObject<EN_PacketGameState>(bytes);
         }
     }
 

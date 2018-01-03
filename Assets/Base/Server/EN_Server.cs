@@ -229,7 +229,7 @@ namespace ErnstNetworking
             EN_PacketGameState state;
             state.packet_type = EN_TCP_PACKET_TYPE.GAME_STATE;
             state.packet_client_amount = clients.Count;
-            state.packet_clients = clients.ToArray();
+            //state.packet_clients = clients.ToArray();
 
 
         }

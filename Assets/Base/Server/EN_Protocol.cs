@@ -41,7 +41,7 @@ namespace ErnstNetworking.Protocol
     {
         public EN_TCP_PACKET_TYPE packet_type;
         public int packet_client_amount;
-        public EN_ClientInfo[] packet_clients;
+        //public EN_ClientInfo[] packet_clients;
     }
     
     //TODO: Get rid of perhaps packet_client_id in all the TCP packets.
