@@ -38,6 +38,8 @@ public class EN_Client : MonoBehaviour
     {
         Application.runInBackground = true;
 
+        //TODO: Move Send/Translate UDP/TCP to EN_Protocol
+        // It shouldn't bother the Unity code, really.
     }
 
     private void OnDestroy()
@@ -87,8 +89,8 @@ public class EN_Client : MonoBehaviour
 
                 if (bytes.Length > 0)
                 {
-                    EN_PACKET_TYPE type = EN_Protocol.BytesToType(bytes);
-                    TranslateMessage(type, bytes);
+                    EN_UDP_PACKET_TYPE type = EN_Protocol.BytesToUDPType(bytes);
+                    TranslateUDP(type, bytes);
                 }
             }
 
@@ -100,32 +102,43 @@ public class EN_Client : MonoBehaviour
     {
         while(true)
         {
-            if (tcp_client.Available > 0)
+            int bytes_available = tcp_client.Available;
+            if (bytes_available > 0)
             {
-                byte[] bytes = new byte[tcp_client.ReceiveBufferSize];
-                int bytes_read = stream.Read(bytes, 0, tcp_client.ReceiveBufferSize);
+                byte[] bytes = new byte[bytes_available];
+                int bytes_read = stream.Read(bytes, 0, bytes_available);
 
-                Debug.Log(bytes_read);
+                Debug.Log(bytes_read + " bytes recieved. (TCP)");
+
+                EN_TCP_PACKET_TYPE type = EN_Protocol.BytesToTCPType(bytes);
+                TranslateTCP(type, bytes);
             }
             yield return null;
         }
     }
-
-    private void TranslateMessage(EN_PACKET_TYPE type, byte[] bytes)
+    private void TranslateUDP(EN_UDP_PACKET_TYPE type, byte[] bytes)
     {
-        if (type == EN_PACKET_TYPE.CONNECT)
+        if (type == EN_UDP_PACKET_TYPE.TRANSFORM)
+        {
+
+        }
+    }
+
+    private void TranslateTCP(EN_TCP_PACKET_TYPE type, byte[] bytes)
+    {
+        if (type == EN_TCP_PACKET_TYPE.CONNECT)
         {
             // We connected and want to establish which client we are
             EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
 
             byte[] message = new byte[bytes.Length - 4 - 4 - 16];
-            Buffer.BlockCopy(bytes, 4+4+16, message, 0, message.Length);
+            Buffer.BlockCopy(bytes, 4 + 4 + 16, message, 0, message.Length);
             string name = EN_Protocol.BytesToString(message);
             if (packet.packet_client_guid.Equals(EN_ClientSettings.CLIENT_GUID) == true)
             {
                 name += " (you)";
             }
-            
+
             AddClient(packet.packet_client_guid, packet.packet_client_id, name);
         }
     }

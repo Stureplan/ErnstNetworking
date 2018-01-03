@@ -48,23 +48,51 @@ namespace ErnstNetworking
                 // TODO: Disconnect all clients and maybe some cleanup (?)
                 if ((Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)){ break; }
 
+                // Searches the tcp listener for new connections.
                 DiscoverClients();
 
-                RecieveTCP();
-                RecieveUDP();
+                // Check if clients have disconnected.
+                PollClients();
+
+                // Receive messages over TCP & UDP
+                ReceiveTCP();
+                ReceiveUDP();
             }
 
             udp_server.Close();
+            for (int i = 0; i < tcp_clients.Count; i++)
+            {
+                tcp_clients[i].GetStream().Close();
+                tcp_clients[i].Close();
+            }
         }
 
         private async void DiscoverClients()
         {
             TcpClient client = await tcp_server.AcceptTcpClientAsync();
             tcp_clients.Add(client);
-            Console.WriteLine("SYSTEM: Client found.");
         }
 
-        private void RecieveUDP()
+        private void PollClients()
+        {
+            for (int i = 0; i < tcp_clients.Count; i++)
+            {
+                if (tcp_clients[i].Client.Poll(0, SelectMode.SelectRead) == true)
+                {
+                    byte[] bytes = new byte[1];
+                    if (tcp_clients[i].Client.Receive(bytes, SocketFlags.Peek) == 0)
+                    {
+                        Console.WriteLine("SYSTEM: User disconnected.");
+
+                        tcp_clients[i].GetStream().Close();
+                        tcp_clients[i].Close();
+                        tcp_clients.Remove(tcp_clients[i]);
+                    }
+                }
+            }
+        }
+
+        private void ReceiveUDP()
         {
             if (udp_server.Available > 0)
             {
@@ -73,7 +101,7 @@ namespace ErnstNetworking
                 if (bytes.Length > 0)
                 {
                     // Get & translate first 4 bytes
-                    EN_PACKET_TYPE packet_type = EN_Protocol.BytesToType(bytes);
+                    EN_UDP_PACKET_TYPE packet_type = EN_Protocol.BytesToUDPType(bytes);
 
                     // Print packet info
                     Console.WriteLine("UDP " + source.Address.ToString() + ": " + TranslateUDP(source, packet_type, bytes));
@@ -81,7 +109,7 @@ namespace ErnstNetworking
             }
         }
 
-        private void RecieveTCP()
+        private void ReceiveTCP()
         {
             for (int i = 0; i < tcp_clients.Count; i++)
             {
@@ -93,17 +121,17 @@ namespace ErnstNetworking
                     stream.Read(bytes, 0, bytes_available);
 
 
-                    EN_PACKET_TYPE packet_type = EN_Protocol.BytesToType(bytes);
+                    EN_TCP_PACKET_TYPE packet_type = EN_Protocol.BytesToTCPType(bytes);
 
                     Console.WriteLine("TCP " + ((IPEndPoint)tcp_clients[i].Client.RemoteEndPoint).Address.ToString() + ": " + TranslateTCP(tcp_clients[i], source, packet_type, bytes));
                 }
             }
         }
 
-        private string TranslateUDP(IPEndPoint source, EN_PACKET_TYPE type, byte[] bytes)
+        private string TranslateUDP(IPEndPoint source, EN_UDP_PACKET_TYPE type, byte[] bytes)
         {
             string s = "";
-            if (type == EN_PACKET_TYPE.TRANSFORM)
+            if (type == EN_UDP_PACKET_TYPE.TRANSFORM)
             {
                 EN_PacketTransform packet = EN_Protocol.BytesToObject<EN_PacketTransform>(bytes);
                 BroadcastUDP(bytes);
@@ -112,10 +140,10 @@ namespace ErnstNetworking
             return s;
         }
 
-        private string TranslateTCP(TcpClient client, IPEndPoint source, EN_PACKET_TYPE type, byte[] bytes)
+        private string TranslateTCP(TcpClient client, IPEndPoint source, EN_TCP_PACKET_TYPE type, byte[] bytes)
         {
             string s = "";
-            if (type == EN_PACKET_TYPE.CONNECT)
+            if (type == EN_TCP_PACKET_TYPE.CONNECT)
             {
                 EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
                 packet.packet_client_id = udp_clients.Count;
@@ -149,17 +177,17 @@ namespace ErnstNetworking
 
                 s = name + " connected.";
             }
-            if (type == EN_PACKET_TYPE.DISCONNECT)
+            if (type == EN_TCP_PACKET_TYPE.DISCONNECT)
             {
                 EN_PacketDisconnect packet = EN_Protocol.BytesToObject<EN_PacketDisconnect>(bytes);
 
                 s = " disconnected.";
                 //TODO: remove source from clients list
             }
-            if (type == EN_PACKET_TYPE.MESSAGE)
+            if (type == EN_TCP_PACKET_TYPE.MESSAGE)
             {
                 EN_PacketMessage packet;
-                packet.packet_type = EN_PACKET_TYPE.MESSAGE;
+                packet.packet_type = EN_TCP_PACKET_TYPE.MESSAGE;
 
                 byte[] message = new byte[bytes.Length-4];
                 Buffer.BlockCopy(bytes, 4, message, 0, message.Length);
