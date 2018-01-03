@@ -30,6 +30,18 @@ namespace ErnstNetworking
         
         public EN_Server()
         {
+            EN_ClientInfo c1 = new EN_ClientInfo(Guid.NewGuid(), "123");
+            EN_ClientInfo c2 = new EN_ClientInfo(Guid.NewGuid(), "123456");
+
+            byte[] b1 = EN_Protocol.ObjectToBytes(c1);
+            byte[] b2 = EN_Protocol.ObjectToBytes(c2);
+
+            EN_ClientInfo bc1 = EN_Protocol.BytesToObject<EN_ClientInfo>(b1);
+            EN_ClientInfo bc2 = EN_Protocol.BytesToObject<EN_ClientInfo>(b2);
+            //TODO: Marshal the shit out of these EN_ClientInfos.
+            // This allows us to send them straight over the network as byte[] in sequence.
+
+
             udp_server = new UdpClient(EN_ServerSettings.PORT);
             tcp_server = new TcpListener(IPAddress.Any,EN_ServerSettings.PORT);
             source = new IPEndPoint(IPAddress.Any, 0);
@@ -230,8 +242,7 @@ namespace ErnstNetworking
             state.packet_type = EN_TCP_PACKET_TYPE.GAME_STATE;
             state.packet_client_amount = clients.Count;
             //state.packet_clients = clients.ToArray();
-
-
+            
         }
     }
 #endif

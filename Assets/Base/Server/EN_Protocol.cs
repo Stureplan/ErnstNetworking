@@ -17,7 +17,8 @@ namespace ErnstNetworking.Protocol
         GAME_STATE
     }
 
-    public class EN_ClientInfo
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct EN_ClientInfo
     {
         public EN_ClientInfo(TcpClient client, Guid guid, string name)
         {
@@ -30,10 +31,13 @@ namespace ErnstNetworking.Protocol
         {
             client_guid = guid;
             client_name = name;
+            client_tcp = null;
         }
 
         public TcpClient client_tcp;
         public Guid client_guid;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 12)]
         public string client_name;
     }
 
