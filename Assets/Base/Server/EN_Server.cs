@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
+using System.Threading;
+
 using ErnstNetworking.Server;
 using ErnstNetworking.Protocol;
 
@@ -26,7 +28,6 @@ namespace ErnstNetworking
         List<TcpClient> tcp_clients;
         List<byte[]> packet_stack;
 
-
         public EN_Server()
         {
             udp_server = new UdpClient(EN_ServerSettings.PORT);
@@ -38,7 +39,7 @@ namespace ErnstNetworking
 
             Console.WriteLine("Waiting for a connection...");
             tcp_server.Start();
-            tcp_clients.Add(tcp_server.AcceptTcpClient());
+            //tcp_clients.Add(tcp_server.AcceptTcpClient());
 
 
             while (true)
@@ -47,11 +48,20 @@ namespace ErnstNetworking
                 // TODO: Disconnect all clients and maybe some cleanup (?)
                 if ((Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)){ break; }
 
+                DiscoverClients();
+
                 RecieveTCP();
                 RecieveUDP();
             }
 
             udp_server.Close();
+        }
+
+        private async void DiscoverClients()
+        {
+            TcpClient client = await tcp_server.AcceptTcpClientAsync();
+            tcp_clients.Add(client);
+            Console.WriteLine("SYSTEM: Client found.");
         }
 
         private void RecieveUDP()
