@@ -13,7 +13,6 @@ namespace ErnstNetworking.Protocol
     public enum EN_TCP_PACKET_TYPE
     {
         CONNECT = 0,
-        DISCONNECT,
         MESSAGE
     }
 
@@ -33,7 +32,8 @@ namespace ErnstNetworking.Protocol
         public float tX; public float tY; public float tZ;
         public float rX; public float rY; public float rZ;
     }
-
+    //TODO: Get rid of EN_TransformData, EN_ClientInfo and perhaps packet_client_id in all the TCP packets.
+    //and maybe the Guid's aswell.
     struct EN_PacketTransform
     {
         public EN_UDP_PACKET_TYPE   packet_type;
@@ -49,13 +49,6 @@ namespace ErnstNetworking.Protocol
         public int                  packet_client_id;
         public Guid                 packet_client_guid;
         // ...invisible name string <---
-    }
-
-    struct EN_PacketDisconnect
-    {
-        public EN_TCP_PACKET_TYPE   packet_type;
-        public int                  packet_client_id;
-        public Guid                 packet_client_guid;
     }
 
     struct EN_PacketMessage

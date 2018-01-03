@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
-using System.Threading;
 
 using ErnstNetworking.Server;
 using ErnstNetworking.Protocol;
@@ -37,10 +36,10 @@ namespace ErnstNetworking
             tcp_clients = new List<TcpClient>();
             packet_stack = new List<byte[]>();
 
-            Console.WriteLine("Waiting for a connection...");
-            tcp_server.Start();
-            //tcp_clients.Add(tcp_server.AcceptTcpClient());
+            Console.WriteLine("\t\t::ErnstNetworking Server::\n");
+            Console.WriteLine("Waiting for connections...");
 
+            tcp_server.Start();
 
             while (true)
             {
@@ -176,13 +175,6 @@ namespace ErnstNetworking
                 packet_stack.Add(bytes);
 
                 s = name + " connected.";
-            }
-            if (type == EN_TCP_PACKET_TYPE.DISCONNECT)
-            {
-                EN_PacketDisconnect packet = EN_Protocol.BytesToObject<EN_PacketDisconnect>(bytes);
-
-                s = " disconnected.";
-                //TODO: remove source from clients list
             }
             if (type == EN_TCP_PACKET_TYPE.MESSAGE)
             {
