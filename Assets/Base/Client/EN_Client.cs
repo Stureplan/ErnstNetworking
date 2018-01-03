@@ -150,16 +150,13 @@ public class EN_Client : MonoBehaviour
     {
         clients.Add(new EN_ClientInfo(guid,n));
 
-        text_clients.text += n;
-
-        //string s = "";
+        string s = "";
         for (int i = 0; i < clients.Count; i++)
         {
-            //s += clients[i].client_name + "\n";
+            s += clients[i].client_name + '\n';
         }
 
-        //Debug.Log(s);
-        //text_clients.text = s;
+        text_clients.text = s;
     }
 
     public void ConnectClient()

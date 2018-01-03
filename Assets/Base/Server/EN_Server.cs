@@ -121,19 +121,20 @@ namespace ErnstNetworking
         {
             for (int i = 0; i < tcp_clients.Count; i++)
             {
-                int bytes_available = tcp_clients[i].Available;
-                if (bytes_available > 0)
+                if (tcp_clients[i].Available > 0)
                 {
                     NetworkStream stream = tcp_clients[i].GetStream();
-                    byte[] bytes_size = new byte[4];
-                    byte[] bytes_data = new byte[bytes_available];
 
+
+                    byte[] bytes_size = new byte[4];
                     stream.Read(bytes_size, 0, 4);
-                    stream.Read(bytes_data, 0, bytes_available);
+                    int bytesize = BitConverter.ToInt32(bytes_size, 0);
+
+                    byte[] bytes_data = new byte[bytesize];
+                    stream.Read(bytes_data, 0, bytesize);
 
 
                     EN_TCP_PACKET_TYPE packet_type = EN_Protocol.BytesToTCPType(bytes_data, 0);
-
                     Console.WriteLine("TCP " + ((IPEndPoint)tcp_clients[i].Client.RemoteEndPoint).Address.ToString() + ": " + TranslateTCP(tcp_clients[i], source, packet_type, bytes_data));
                 }
             }
@@ -203,7 +204,7 @@ namespace ErnstNetworking
             for (int i = 0; i < tcp_clients.Count; i++)
             {
                 NetworkStream stream = tcp_clients[i].GetStream();
-
+                
                 stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
                 stream.Write(bytes, 0, bytes.Length);
             }
@@ -219,6 +220,18 @@ namespace ErnstNetworking
                 stream.Write(BitConverter.GetBytes(packet_stack[i].Length), 0, 4);
                 stream.Write(packet_stack[i], 0, packet_stack[i].Length);
             }
+        }
+
+        private void SendStateTCP(TcpClient client)
+        {
+            NetworkStream stream = client.GetStream();
+
+            EN_PacketGameState state;
+            state.packet_type = EN_TCP_PACKET_TYPE.GAME_STATE;
+            state.packet_client_amount = clients.Count;
+            state.packet_clients = clients.ToArray();
+
+
         }
     }
 #endif

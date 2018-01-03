@@ -13,7 +13,8 @@ namespace ErnstNetworking.Protocol
     public enum EN_TCP_PACKET_TYPE
     {
         CONNECT = 0,
-        MESSAGE
+        MESSAGE,
+        GAME_STATE
     }
 
     public class EN_ClientInfo
@@ -35,13 +36,21 @@ namespace ErnstNetworking.Protocol
         public Guid client_guid;
         public string client_name;
     }
+
+    public struct EN_PacketGameState
+    {
+        public EN_TCP_PACKET_TYPE packet_type;
+        public int packet_client_amount;
+        public EN_ClientInfo[] packet_clients;
+    }
     
     //TODO: Get rid of perhaps packet_client_id in all the TCP packets.
     //and maybe the Guid's aswell.
     struct EN_PacketTransform
     {
         public EN_UDP_PACKET_TYPE   packet_type;
-        public Guid                 packet_client_guid;
+        public int                  packet_object;
+        //public Guid                 packet_client_guid;
 
         public float tX; public float tY; public float tZ;
         public float rX; public float rY; public float rZ;
