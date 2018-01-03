@@ -16,28 +16,32 @@ namespace ErnstNetworking.Protocol
         MESSAGE
     }
 
-    struct EN_ClientInfo
+    public class EN_ClientInfo
     {
-        public EN_ClientInfo(int i, string n)
+        public EN_ClientInfo(TcpClient client, Guid guid, string name)
         {
-            id = i;
-            name = n;
+            client_tcp  = client;
+            client_guid = guid;
+            client_name = name;
         }
-        public int id;
-        public string name;
+
+        public EN_ClientInfo(Guid guid, string name)
+        {
+            client_guid = guid;
+            client_name = name;
+        }
+
+        public TcpClient client_tcp;
+        public Guid client_guid;
+        public string client_name;
     }
     
-    struct EN_TransformData
-    {
-        public float tX; public float tY; public float tZ;
-        public float rX; public float rY; public float rZ;
-    }
-    //TODO: Get rid of EN_TransformData, EN_ClientInfo and perhaps packet_client_id in all the TCP packets.
+    //TODO: Get rid of perhaps packet_client_id in all the TCP packets.
     //and maybe the Guid's aswell.
     struct EN_PacketTransform
     {
         public EN_UDP_PACKET_TYPE   packet_type;
-        public int                  packet_client_id;
+        public Guid                 packet_client_guid;
 
         public float tX; public float tY; public float tZ;
         public float rX; public float rY; public float rZ;
@@ -46,7 +50,6 @@ namespace ErnstNetworking.Protocol
     struct EN_PacketConnect
     {
         public EN_TCP_PACKET_TYPE   packet_type;
-        public int                  packet_client_id;
         public Guid                 packet_client_guid;
         // ...invisible name string <---
     }
@@ -59,7 +62,7 @@ namespace ErnstNetworking.Protocol
 
     public class EN_Protocol
     {
-        public static void Connect(UdpClient client, IPEndPoint server, string name, Guid guid)
+        public static void Connect(UdpClient client, IPEndPoint server)
         {
             client.Connect(server);
             //client.Send(bytes, bytes.Length);
@@ -71,7 +74,6 @@ namespace ErnstNetworking.Protocol
             {
                 EN_PacketConnect packet;
                 packet.packet_type = EN_TCP_PACKET_TYPE.CONNECT;
-                packet.packet_client_id = -1;
                 packet.packet_client_guid = guid;
 
                 byte[] b1 = ObjectToBytes(packet);
@@ -84,6 +86,7 @@ namespace ErnstNetworking.Protocol
                 client.Connect(server);
 
                 NetworkStream stream = client.GetStream();
+                //stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
                 stream.Write(bytes, 0, bytes.Length);
                 //connected
             }
@@ -93,12 +96,12 @@ namespace ErnstNetworking.Protocol
             }
         }
 
-        public static void Send(UdpClient client, object msg)
+        public static void SendUDP(UdpClient client, object msg)
         {
             byte[] bytes = ObjectToBytes(msg);
             client.Send(bytes, bytes.Length);
         }
-        
+
         public static void SendText(NetworkStream stream, string msg)
         {
             byte[] b1 = ObjectToBytes((int)EN_TCP_PACKET_TYPE.MESSAGE);
@@ -166,9 +169,9 @@ namespace ErnstNetworking.Protocol
             return (EN_UDP_PACKET_TYPE)BitConverter.ToInt32(bytes, 0);
         }
 
-        public static EN_TCP_PACKET_TYPE BytesToTCPType(byte[] bytes)
+        public static EN_TCP_PACKET_TYPE BytesToTCPType(byte[] bytes, int offset)
         {
-            return (EN_TCP_PACKET_TYPE)BitConverter.ToInt32(bytes, 0);
+            return (EN_TCP_PACKET_TYPE)BitConverter.ToInt32(bytes, offset);
         }
     }
 }

@@ -28,7 +28,7 @@ public class EN_Client : MonoBehaviour
     private NetworkStream stream;
 
     // Client list (connected players)
-    private Dictionary<Guid, string> clients;
+    private List<EN_ClientInfo> clients;
 
     // UI Stuff
     public Text text_clients;
@@ -106,11 +106,13 @@ public class EN_Client : MonoBehaviour
             if (bytes_available > 0)
             {
                 byte[] bytes = new byte[bytes_available];
-                int bytes_read = stream.Read(bytes, 0, bytes_available);
+                stream.Read(bytes, 0, bytes_available);
 
-                Debug.Log(bytes_read + " bytes recieved. (TCP)");
 
-                EN_TCP_PACKET_TYPE type = EN_Protocol.BytesToTCPType(bytes);
+                EN_TCP_PACKET_TYPE type = EN_Protocol.BytesToTCPType(bytes, 0);
+
+                Debug.Log(bytes_available + " bytes recieved. (TCP)");
+
                 TranslateTCP(type, bytes);
             }
             yield return null;
@@ -128,30 +130,31 @@ public class EN_Client : MonoBehaviour
     {
         if (type == EN_TCP_PACKET_TYPE.CONNECT)
         {
-            // We connected and want to establish which client we are
+            Debug.Log("CONNECT");
+            // Someone connected and we want to establish who it is
             EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
 
-            byte[] message = new byte[bytes.Length - 4 - 4 - 16];
-            Buffer.BlockCopy(bytes, 4 + 4 + 16, message, 0, message.Length);
+            byte[] message = new byte[bytes.Length - 4 - 16];
+            Buffer.BlockCopy(bytes, 4 + 16, message, 0, message.Length);
             string name = EN_Protocol.BytesToString(message);
             if (packet.packet_client_guid.Equals(EN_ClientSettings.CLIENT_GUID) == true)
             {
                 name += " (you)";
             }
 
-            AddClient(packet.packet_client_guid, packet.packet_client_id, name);
+            AddClient(packet.packet_client_guid, name);
         }
     }
 
 
-    private void AddClient(Guid guid, int id, string n)
+    private void AddClient(Guid guid, string n)
     {
-        clients.Add(guid,n + "\tID: " +id.ToString());
+        clients.Add(new EN_ClientInfo(guid,n));
 
         string s = "";
-        foreach(KeyValuePair<Guid, string> item in clients)
+        for (int i = 0; i < clients.Count; i++)
         {
-            s += item.Value;
+            s += clients[i].client_name;
             s += '\n';
         }
 
@@ -165,12 +168,12 @@ public class EN_Client : MonoBehaviour
 
 
         server = new IPEndPoint(IPAddress.Parse(EN_ServerSettings.HOSTNAME), EN_ServerSettings.PORT);
-        clients = new Dictionary<Guid, string>();
+        clients = new List<EN_ClientInfo>();
 
         EN_ClientSettings.CLIENT_NAME = text_name.text;
         EN_ClientSettings.CLIENT_GUID = Guid.NewGuid();
 
-        EN_Protocol.Connect(udp_client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID);
+        EN_Protocol.Connect(udp_client, server);
         EN_Protocol.Connect(tcp_client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID);
 
         stream = tcp_client.GetStream();
