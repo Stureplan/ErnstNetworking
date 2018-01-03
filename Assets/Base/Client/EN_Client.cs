@@ -113,8 +113,6 @@ public class EN_Client : MonoBehaviour
 
                 EN_TCP_PACKET_TYPE type = EN_Protocol.BytesToTCPType(bytes_data, 0);
                 TranslateTCP(type, bytes_data);
-
-                Debug.Log(bytesize + " bytes in this message. (TCP)");
             }
             yield return null;
         }
@@ -131,7 +129,7 @@ public class EN_Client : MonoBehaviour
     {
         if (type == EN_TCP_PACKET_TYPE.CONNECT)
         {
-            Debug.Log("CONNECT");
+            //Debug.Log("CONNECT");
             // Someone connected and we want to establish who it is
             EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
 
@@ -152,14 +150,16 @@ public class EN_Client : MonoBehaviour
     {
         clients.Add(new EN_ClientInfo(guid,n));
 
-        string s = "";
+        text_clients.text += n;
+
+        //string s = "";
         for (int i = 0; i < clients.Count; i++)
         {
-            s += clients[i].client_name;
-            s += '\n';
+            //s += clients[i].client_name + "\n";
         }
 
-        text_clients.text = s;
+        //Debug.Log(s);
+        //text_clients.text = s;
     }
 
     public void ConnectClient()
