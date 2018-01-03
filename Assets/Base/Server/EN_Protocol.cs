@@ -30,6 +30,15 @@ namespace ErnstNetworking.Protocol
         public float rX; public float rY; public float rZ;
     }
 
+    struct EN_PacketTransform
+    {
+        public EN_PACKET_TYPE   packet_type;
+        public int              packet_client_id;
+
+        public float tX; public float tY; public float tZ;
+        public float rX; public float rY; public float rZ;
+    }
+
     struct EN_PacketConnect
     {
         public EN_PACKET_TYPE   packet_type;
@@ -53,22 +62,38 @@ namespace ErnstNetworking.Protocol
 
     public class EN_Protocol
     {
-        public static void Connect(UdpClient client, IPEndPoint target, string name, Guid guid)
+        public static void Connect(UdpClient client, IPEndPoint server, string name, Guid guid)
         {
-            EN_PacketConnect packet;
-            packet.packet_type = EN_PACKET_TYPE.CONNECT;
-            packet.packet_client_id = -1;
-            packet.packet_client_guid = guid;
+            client.Connect(server);
+            //client.Send(bytes, bytes.Length);
+        }
 
-            byte[] b1 = ObjectToBytes(packet);
-            byte[] b2 = StringToBytes(name);
+        public static void Connect(TcpClient client, IPEndPoint server, string name, Guid guid)
+        {
+            try
+            {
+                EN_PacketConnect packet;
+                packet.packet_type = EN_PACKET_TYPE.CONNECT;
+                packet.packet_client_id = -1;
+                packet.packet_client_guid = guid;
 
-            byte[] bytes = new byte[b1.Length + b2.Length];
-            Buffer.BlockCopy(b1, 0, bytes, 0, b1.Length);
-            Buffer.BlockCopy(b2, 0, bytes, b1.Length, b2.Length);
+                byte[] b1 = ObjectToBytes(packet);
+                byte[] b2 = StringToBytes(name);
 
-            client.Connect(target);
-            client.Send(bytes, bytes.Length);
+                byte[] bytes = new byte[b1.Length + b2.Length];
+                Buffer.BlockCopy(b1, 0, bytes, 0, b1.Length);
+                Buffer.BlockCopy(b2, 0, bytes, b1.Length, b2.Length);
+
+                client.Connect(server);
+
+                NetworkStream stream = client.GetStream();
+                stream.Write(bytes, 0, bytes.Length);
+                //connected
+            }
+            catch
+            {
+                //not connected
+            }
         }
 
         public static void Send(UdpClient client, object msg)
@@ -77,7 +102,7 @@ namespace ErnstNetworking.Protocol
             client.Send(bytes, bytes.Length);
         }
         
-        public static void SendText(UdpClient client, string msg)
+        public static void SendText(NetworkStream stream, string msg)
         {
             byte[] b1 = ObjectToBytes((int)EN_PACKET_TYPE.MESSAGE);
             byte[] b2 = StringToBytes(msg);
@@ -86,7 +111,7 @@ namespace ErnstNetworking.Protocol
             Buffer.BlockCopy(b1, 0, bytes, 0, b1.Length);
             Buffer.BlockCopy(b2, 0, bytes, b1.Length, b2.Length);
 
-            client.Send(bytes, bytes.Length);
+            stream.Write(bytes, 0, bytes.Length);
         }
 
         public static byte[] StringToBytes(string str)

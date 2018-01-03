@@ -17,11 +17,15 @@ using ErnstNetworking.Protocol;
 public class EN_Client : MonoBehaviour
 {
     // This client (PC)
-    private UdpClient client;
+    private UdpClient udp_client;
+    private TcpClient tcp_client;
 
     // Target connection
     private IPEndPoint server;
     private bool connected = false;
+
+    // Network stream
+    private NetworkStream stream;
 
     // Client list (connected players)
     private Dictionary<Guid, string> clients;
@@ -33,13 +37,14 @@ public class EN_Client : MonoBehaviour
     private void Start()
     {
         Application.runInBackground = true;
+
     }
 
     private void OnDestroy()
     {
         if (connected)
         {
-            client.Close();
+            udp_client.Close();
         }
     }
 
@@ -51,7 +56,8 @@ public class EN_Client : MonoBehaviour
         while (true)
         {
             // Send text message every <interval> seconds
-            EN_Protocol.SendText(client, "Hello!");
+            //EN_Protocol.SendText(udp_client, "Hello!");
+            //TODO: Send transform instead of text
             yield return new WaitForSeconds(interval);
         }
     }
@@ -62,15 +68,22 @@ public class EN_Client : MonoBehaviour
         // client.Send(ObjectToBytes(packet), )
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            EN_Protocol.SendText(stream, "Hello!");
+        }
+    }
 
 
     private IEnumerator ReceiveUDP()
     {
         while (true)
         {
-            if (client.Available > 0)
+            if (udp_client.Available > 0)
             {
-                byte[] bytes = client.Receive(ref server);
+                byte[] bytes = udp_client.Receive(ref server);
 
                 if (bytes.Length > 0)
                 {
@@ -83,9 +96,19 @@ public class EN_Client : MonoBehaviour
         }
     }
 
-    private void ReceiveTCP()
+    private IEnumerator ReceiveTCP()
     {
+        while(true)
+        {
+            if (tcp_client.Available > 0)
+            {
+                byte[] bytes = new byte[tcp_client.ReceiveBufferSize];
+                int bytes_read = stream.Read(bytes, 0, tcp_client.ReceiveBufferSize);
 
+                Debug.Log(bytes_read);
+            }
+            yield return null;
+        }
     }
 
     private void TranslateMessage(EN_PACKET_TYPE type, byte[] bytes)
@@ -124,18 +147,24 @@ public class EN_Client : MonoBehaviour
 
     public void ConnectClient()
     {
-        client = new UdpClient();
-        server = new IPEndPoint(IPAddress.Parse(EN_ServerSettings.HOSTNAME), EN_ServerSettings.PORT);
-        //client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 2000);
+        udp_client = new UdpClient();
+        tcp_client = new TcpClient();
 
+
+        server = new IPEndPoint(IPAddress.Parse(EN_ServerSettings.HOSTNAME), EN_ServerSettings.PORT);
         clients = new Dictionary<Guid, string>();
 
         EN_ClientSettings.CLIENT_NAME = text_name.text;
         EN_ClientSettings.CLIENT_GUID = Guid.NewGuid();
 
-        EN_Protocol.Connect(client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID);
+        EN_Protocol.Connect(udp_client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID);
+        EN_Protocol.Connect(tcp_client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID);
+
+        stream = tcp_client.GetStream();
+
         StartCoroutine(SendUDP(EN_ClientSettings.SEND_INTERVAL));
         StartCoroutine(ReceiveUDP());
+        StartCoroutine(ReceiveTCP());
 
         connected = true;
     }
