@@ -86,7 +86,7 @@ namespace ErnstNetworking.Protocol
                 client.Connect(server);
 
                 NetworkStream stream = client.GetStream();
-                //stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
+                stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
                 stream.Write(bytes, 0, bytes.Length);
                 //connected
             }
@@ -111,6 +111,7 @@ namespace ErnstNetworking.Protocol
             Buffer.BlockCopy(b1, 0, bytes, 0, b1.Length);
             Buffer.BlockCopy(b2, 0, bytes, b1.Length, b2.Length);
 
+            stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
             stream.Write(bytes, 0, bytes.Length);
         }
 

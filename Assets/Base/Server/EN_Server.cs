@@ -125,13 +125,16 @@ namespace ErnstNetworking
                 if (bytes_available > 0)
                 {
                     NetworkStream stream = tcp_clients[i].GetStream();
-                    byte[] bytes = new byte[bytes_available];
-                    stream.Read(bytes, 0, bytes_available);
+                    byte[] bytes_size = new byte[4];
+                    byte[] bytes_data = new byte[bytes_available];
+
+                    stream.Read(bytes_size, 0, 4);
+                    stream.Read(bytes_data, 0, bytes_available);
 
 
-                    EN_TCP_PACKET_TYPE packet_type = EN_Protocol.BytesToTCPType(bytes, 0);
+                    EN_TCP_PACKET_TYPE packet_type = EN_Protocol.BytesToTCPType(bytes_data, 0);
 
-                    Console.WriteLine("TCP " + ((IPEndPoint)tcp_clients[i].Client.RemoteEndPoint).Address.ToString() + ": " + TranslateTCP(tcp_clients[i], source, packet_type, bytes));
+                    Console.WriteLine("TCP " + ((IPEndPoint)tcp_clients[i].Client.RemoteEndPoint).Address.ToString() + ": " + TranslateTCP(tcp_clients[i], source, packet_type, bytes_data));
                 }
             }
         }
@@ -200,6 +203,8 @@ namespace ErnstNetworking
             for (int i = 0; i < tcp_clients.Count; i++)
             {
                 NetworkStream stream = tcp_clients[i].GetStream();
+
+                stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
                 stream.Write(bytes, 0, bytes.Length);
             }
         }
@@ -211,8 +216,8 @@ namespace ErnstNetworking
             // Re-broadcast all old messages
             for (int i = 0; i < packet_stack.Count; i++)
             {
+                stream.Write(BitConverter.GetBytes(packet_stack[i].Length), 0, 4);
                 stream.Write(packet_stack[i], 0, packet_stack[i].Length);
-                
             }
         }
     }

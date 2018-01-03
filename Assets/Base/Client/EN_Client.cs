@@ -102,18 +102,19 @@ public class EN_Client : MonoBehaviour
     {
         while(true)
         {
-            int bytes_available = tcp_client.Available;
-            if (bytes_available > 0)
+            if (tcp_client.Available > 0)
             {
-                byte[] bytes = new byte[bytes_available];
-                stream.Read(bytes, 0, bytes_available);
+                byte[] bytes_size = new byte[4];
+                stream.Read(bytes_size, 0, 4);
+                int bytesize = BitConverter.ToInt32(bytes_size, 0);
 
+                byte[] bytes_data = new byte[bytesize];
+                stream.Read(bytes_data, 0, bytesize);
 
-                EN_TCP_PACKET_TYPE type = EN_Protocol.BytesToTCPType(bytes, 0);
+                EN_TCP_PACKET_TYPE type = EN_Protocol.BytesToTCPType(bytes_data, 0);
+                TranslateTCP(type, bytes_data);
 
-                Debug.Log(bytes_available + " bytes recieved. (TCP)");
-
-                TranslateTCP(type, bytes);
+                Debug.Log(bytesize + " bytes in this message. (TCP)");
             }
             yield return null;
         }
