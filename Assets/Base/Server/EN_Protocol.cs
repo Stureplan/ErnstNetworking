@@ -65,6 +65,8 @@ namespace ErnstNetworking.Protocol
     {
         public EN_TCP_PACKET_TYPE   packet_type;
         public Guid                 packet_client_guid;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 12)]
         public string               packet_client_name;
     }
 
@@ -73,7 +75,7 @@ namespace ErnstNetworking.Protocol
     {
         public EN_TCP_PACKET_TYPE   packet_type;
 
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 12)]
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
         public string               packet_message;
 
         public EN_PacketMessage(string msg)

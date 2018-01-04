@@ -132,15 +132,12 @@ public class EN_Client : MonoBehaviour
             // Someone connected and we want to establish who it is
             EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
 
-            byte[] message = new byte[bytes.Length - 4 - 16];
-            Buffer.BlockCopy(bytes, 4 + 16, message, 0, message.Length);
-            string name = EN_Protocol.BytesToString(message);
             if (packet.packet_client_guid.Equals(EN_ClientSettings.CLIENT_GUID) == true)
             {
-                name += " (you)";
+                packet.packet_client_name += " (you)";
             }
 
-            AddClient(packet.packet_client_guid, name);
+            AddClient(packet.packet_client_guid, packet.packet_client_name);
         }
         if (type == EN_TCP_PACKET_TYPE.GAME_STATE)
         {
