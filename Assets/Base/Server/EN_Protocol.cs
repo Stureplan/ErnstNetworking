@@ -43,9 +43,9 @@ namespace ErnstNetworking.Protocol
 
     public struct EN_PacketGameState
     {
-        public EN_TCP_PACKET_TYPE packet_type;
-        public int packet_client_amount;
-        //public EN_ClientInfo[] packet_clients;
+        public EN_TCP_PACKET_TYPE   packet_type;
+        public int                  packet_client_amount;
+        public EN_ClientInfo[] packet_clients;
     }
     
     //TODO: Get rid of perhaps packet_client_id in all the TCP packets.
@@ -60,17 +60,27 @@ namespace ErnstNetworking.Protocol
         public float rX; public float rY; public float rZ;
     }
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     struct EN_PacketConnect
     {
         public EN_TCP_PACKET_TYPE   packet_type;
         public Guid                 packet_client_guid;
-        // ...invisible name string <---
+        public string               packet_client_name;
     }
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
     struct EN_PacketMessage
     {
         public EN_TCP_PACKET_TYPE   packet_type;
-        public byte[]               packet_data;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 12)]
+        public string               packet_message;
+
+        public EN_PacketMessage(string msg)
+        {
+            packet_type = EN_TCP_PACKET_TYPE.MESSAGE;
+            packet_message = msg;
+        }
     }
 
     public class EN_Protocol
@@ -88,13 +98,9 @@ namespace ErnstNetworking.Protocol
                 EN_PacketConnect packet;
                 packet.packet_type = EN_TCP_PACKET_TYPE.CONNECT;
                 packet.packet_client_guid = guid;
+                packet.packet_client_name = name;
 
-                byte[] b1 = ObjectToBytes(packet);
-                byte[] b2 = StringToBytes(name);
-
-                byte[] bytes = new byte[b1.Length + b2.Length];
-                Buffer.BlockCopy(b1, 0, bytes, 0, b1.Length);
-                Buffer.BlockCopy(b2, 0, bytes, b1.Length, b2.Length);
+                byte[] bytes = ObjectToBytes(packet);
 
                 client.Connect(server);
 
@@ -115,16 +121,17 @@ namespace ErnstNetworking.Protocol
             client.Send(bytes, bytes.Length);
         }
 
-        public static void SendText(NetworkStream stream, string msg)
+        public static void SendTCP(NetworkStream stream, object msg)
         {
-            byte[] b1 = ObjectToBytes((int)EN_TCP_PACKET_TYPE.MESSAGE);
-            byte[] b2 = StringToBytes(msg);
+            byte[] bytes = ObjectToBytes(msg);
+            stream.Write(ObjectToBytes(bytes.Length), 0, 4);
+            stream.Write(bytes, 0, bytes.Length);
+        }
 
-            byte[] bytes = new byte[b1.Length + b2.Length];
-            Buffer.BlockCopy(b1, 0, bytes, 0, b1.Length);
-            Buffer.BlockCopy(b2, 0, bytes, b1.Length, b2.Length);
-
-            stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
+        public static void SendTCP(NetworkStream stream, EN_TCP_PACKET_TYPE type, byte[] bytes)
+        {
+            stream.Write(ObjectToBytes(bytes.Length), 0, 4);
+            stream.Write(ObjectToBytes(type), 0, 4);
             stream.Write(bytes, 0, bytes.Length);
         }
 

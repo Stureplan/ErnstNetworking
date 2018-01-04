@@ -171,10 +171,6 @@ namespace ErnstNetworking
             {
                 EN_PacketConnect packet = EN_Protocol.BytesToObject<EN_PacketConnect>(bytes);
 
-                byte[] message = new byte[bytes.Length - 4 - 16];
-                Buffer.BlockCopy(bytes, 4 + 16, message, 0, message.Length);
-                string name = EN_Protocol.BytesToString(message);
-
                 // Resend older important messages from before
                 ResendStackTCP(client);
 
@@ -184,20 +180,15 @@ namespace ErnstNetworking
                 // Add connect request to the stack of important messages
                 packet_stack.Add(bytes);
 
-                s = name + " connected.";
+                s = packet.packet_client_name + " connected.";
 
                 // Add client to list of unique ID's
-                clients.Add(new EN_ClientInfo(client, packet.packet_client_guid, name));
+                clients.Add(new EN_ClientInfo(client, packet.packet_client_guid, packet.packet_client_name));
             }
             if (type == EN_TCP_PACKET_TYPE.MESSAGE)
             {
-                EN_PacketMessage packet;
-                packet.packet_type = EN_TCP_PACKET_TYPE.MESSAGE;
-
-                byte[] message = new byte[bytes.Length-4];
-                Buffer.BlockCopy(bytes, 4, message, 0, message.Length);
-                packet.packet_data = message;
-                s = EN_Protocol.BytesToString(packet.packet_data);
+                EN_PacketMessage packet = EN_Protocol.BytesToObject<EN_PacketMessage>(bytes);
+                s = packet.packet_message;
             }
 
             return s;

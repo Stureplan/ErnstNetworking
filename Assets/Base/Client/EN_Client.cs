@@ -74,7 +74,7 @@ public class EN_Client : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.A))
         {
-            EN_Protocol.SendText(stream, "Hello!");
+            EN_Protocol.SendTCP(stream, new EN_PacketMessage("Hello!"));
         }
     }
 
