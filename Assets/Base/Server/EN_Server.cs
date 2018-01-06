@@ -7,12 +7,14 @@ using ErnstNetworking.Server;
 using ErnstNetworking.Protocol;
 
 
-
 namespace ErnstNetworking
 {
 #if !UNITY_EDITOR && !UNITY_5 && !UNITY_STANDALONE
     class EN_Server
     {
+        private static readonly string LOADING_IP = "<finding IP address...>";
+
+
         static EN_Server SERVER;
         static void Main(string[] args)
         {
@@ -27,9 +29,40 @@ namespace ErnstNetworking
         List<TcpClient> tcp_clients;
         List<EN_ClientInfo> clients;
         List<byte[]> packet_stack;
+
+        private string IPConfig(string arg)
+        {
+            System.Diagnostics.Process cmd = new System.Diagnostics.Process();
+
+            cmd.StartInfo.FileName = "cmd.exe";
+            cmd.StartInfo.Arguments = arg;
+            cmd.StartInfo.RedirectStandardOutput = true;
+            cmd.StartInfo.CreateNoWindow = true;
+            cmd.StartInfo.UseShellExecute = false;
+
+            cmd.Start();
+
+            string output = cmd.StandardOutput.ReadToEnd();
+            return Sanitize(output);
+        }
+
+        private string Sanitize(string output)
+        {
+            output = output.Remove(0, output.IndexOf("DNS Servers"));
+
+            int endl = output.IndexOf('\n');
+            int length = output.Length;
+
+            output = output.Remove(endl, length-endl);
+            output = output.Remove(0, output.IndexOf(':')+1);
+
+            return output;
+        }
         
         public EN_Server()
         {
+
+
             EN_ClientInfo c1 = new EN_ClientInfo(Guid.NewGuid(), "123");
             EN_ClientInfo c2 = new EN_ClientInfo(Guid.NewGuid(), "123456");
 
@@ -51,6 +84,18 @@ namespace ErnstNetworking
             clients = new List<EN_ClientInfo>();
 
             Console.WriteLine("\t\t::ErnstNetworking Server::\n");
+            Console.Write("Your external IP is: ");
+            Console.Write(LOADING_IP);
+
+            string ip = IPConfig("/c ipconfig /all") + '\n';
+
+            for (int i = 0; i < LOADING_IP.Length; i++)
+            {
+                Console.Write("\b \b");
+            }
+
+            Console.Write(ip);
+
             Console.WriteLine("Waiting for connections...");
 
             tcp_server.Start();
