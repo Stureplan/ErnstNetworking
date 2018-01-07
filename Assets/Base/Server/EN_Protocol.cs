@@ -58,6 +58,12 @@ namespace ErnstNetworking.Protocol
 
         public float tX; public float tY; public float tZ;
         public float rX; public float rY; public float rZ;
+
+        public string ToReadable()
+        {
+            string s = "T: " + tX + tY + tZ + "\tR: " + rX + rY + rZ;
+            return s;
+        }
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -90,11 +96,15 @@ namespace ErnstNetworking.Protocol
         public static void Connect(UdpClient client, IPEndPoint server)
         {
             client.Connect(server);
-            //client.Send(bytes, bytes.Length);
         }
 
-        public static void Connect(TcpClient client, IPEndPoint server, string name, Guid guid)
+        public static bool Connect(TcpClient client, IPEndPoint server, string name, Guid guid)
         {
+            if (client.Connected)
+            {
+                client.Client.Disconnect(true);
+            }
+
             try
             {
                 EN_PacketConnect packet;
@@ -110,10 +120,16 @@ namespace ErnstNetworking.Protocol
                 stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
                 stream.Write(bytes, 0, bytes.Length);
                 //connected
+                return true;
             }
-            catch
+            catch(SocketException e)
             {
                 //not connected
+                return false;
+            }
+            catch(Exception e)
+            {
+                return false;
             }
         }
 
@@ -127,13 +143,6 @@ namespace ErnstNetworking.Protocol
         {
             byte[] bytes = ObjectToBytes(msg);
             stream.Write(ObjectToBytes(bytes.Length), 0, 4);
-            stream.Write(bytes, 0, bytes.Length);
-        }
-
-        public static void SendTCP(NetworkStream stream, EN_TCP_PACKET_TYPE type, byte[] bytes)
-        {
-            stream.Write(ObjectToBytes(bytes.Length), 0, 4);
-            stream.Write(ObjectToBytes(type), 0, 4);
             stream.Write(bytes, 0, bytes.Length);
         }
 

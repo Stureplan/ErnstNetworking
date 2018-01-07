@@ -34,6 +34,8 @@ public class EN_SyncTransform : MonoBehaviour
         data.packet_object = 1;
         data.tX = pos.x; data.tY = pos.y; data.tZ = pos.z;
         data.rX = rot.x; data.rY = rot.y; data.rZ = rot.z;
-        
+
+        EN_Client c = EN_Client.Contact();
+        c.SendUDP(data);
     }
 }

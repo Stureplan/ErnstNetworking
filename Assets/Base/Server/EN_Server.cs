@@ -27,7 +27,6 @@ namespace ErnstNetworking
         IPEndPoint udp_source;
         List<IPEndPoint> udp_clients;
         List<TcpClient> tcp_clients;
-        List<EN_ClientInfo> clients;
         List<byte[]> packet_stack;
 
         private string IPConfig(string arg)
@@ -82,7 +81,6 @@ namespace ErnstNetworking
             udp_clients = new List<IPEndPoint>();
             tcp_clients = new List<TcpClient>();
             packet_stack = new List<byte[]>();
-            clients = new List<EN_ClientInfo>();
 
             Console.WriteLine("\t\t::ErnstNetworking Server::\n");
             Console.Write("Your external IP is: ");
@@ -113,9 +111,9 @@ namespace ErnstNetworking
                 // Check if clients have disconnected.
                 PollClients();
 
-                // Receive messages over TCP & UDP
-                ReceiveTCP();
+                // Receive messages over UDP & TCP
                 ReceiveUDP();
+                ReceiveTCP();
             }
 
             udp_server.Close();
@@ -128,8 +126,11 @@ namespace ErnstNetworking
 
         private async void DiscoverClients()
         {
-            TcpClient client = await tcp_server.AcceptTcpClientAsync();
-            tcp_clients.Add(client);
+            if (tcp_clients.Count < 8)
+            {
+                TcpClient client = await tcp_server.AcceptTcpClientAsync();
+                tcp_clients.Add(client);
+            }
         }
 
         private void PollClients()
@@ -151,6 +152,7 @@ namespace ErnstNetworking
         {
             Console.WriteLine("SERVER: User disconnected.");
 
+            client.Client.Disconnect(true);
             client.GetStream().Close();
             client.Close();
             tcp_clients.Remove(client);
@@ -193,7 +195,9 @@ namespace ErnstNetworking
 
 
                     EN_TCP_PACKET_TYPE packet_type = EN_Protocol.BytesToTCPType(bytes_data, 0);
-                    Console.WriteLine("TCP " + ((IPEndPoint)tcp_clients[i].Client.RemoteEndPoint).Address.ToString() + ": " + TranslateTCP(tcp_clients[i], udp_source, packet_type, bytes_data));
+
+                    IPEndPoint source = (IPEndPoint)tcp_clients[i].Client.RemoteEndPoint;
+                    Console.WriteLine("TCP " + (source.Address.ToString() + ": " + TranslateTCP(tcp_clients[i], packet_type, bytes_data)));
                 }
             }
         }
@@ -204,13 +208,15 @@ namespace ErnstNetworking
             if (type == EN_UDP_PACKET_TYPE.TRANSFORM)
             {
                 EN_PacketTransform packet = EN_Protocol.BytesToObject<EN_PacketTransform>(bytes);
-                BroadcastUDP(bytes);
+                BroadcastUDP(source, bytes);
+
+                s = packet.ToReadable();
             }
 
             return s;
         }
 
-        private string TranslateTCP(TcpClient client, IPEndPoint source, EN_TCP_PACKET_TYPE type, byte[] bytes)
+        private string TranslateTCP(TcpClient client, EN_TCP_PACKET_TYPE type, byte[] bytes)
         {
             string s = "";
             if (type == EN_TCP_PACKET_TYPE.CONNECT)
@@ -228,8 +234,10 @@ namespace ErnstNetworking
 
                 s = packet.packet_client_name + " connected.";
 
+                IPEndPoint temp = (IPEndPoint)client.Client.RemoteEndPoint;
+                udp_clients.Add(temp);
                 // Add client to list of unique ID's
-                clients.Add(new EN_ClientInfo(client, packet.packet_client_guid, packet.packet_client_name));
+                //clients.Add(new EN_ClientInfo(client, packet.packet_client_guid, packet.packet_client_name));
             }
             if (type == EN_TCP_PACKET_TYPE.MESSAGE)
             {
@@ -240,11 +248,17 @@ namespace ErnstNetworking
             return s;
         }
 
-        private void BroadcastUDP(byte[] bytes)
+        private void BroadcastUDP(IPEndPoint source, byte[] bytes)
         {
             for (int i = 0; i < udp_clients.Count; i++)
             {
-                udp_server.Send(bytes, bytes.Length, udp_clients[i]);
+                if (source.Equals(udp_clients[i]) == false)
+                {
+                    // Only broadcast to clients that didn't send the original UDP packet
+                    //TODO: Here shit breaks down for some reason.
+                    //disabling this broadcast stops all errors, so track it down.
+                    udp_server.Send(bytes, bytes.Length, udp_clients[i]);
+                }
             }
         }
 
@@ -273,12 +287,12 @@ namespace ErnstNetworking
 
         private void SendStateTCP(TcpClient client)
         {
-            NetworkStream stream = client.GetStream();
+            //NetworkStream stream = client.GetStream();
 
-            EN_PacketGameState state;
-            state.packet_type = EN_TCP_PACKET_TYPE.GAME_STATE;
-            state.packet_client_amount = clients.Count;
-            state.packet_clients = clients.ToArray();
+            //EN_PacketGameState state;
+            //state.packet_type = EN_TCP_PACKET_TYPE.GAME_STATE;
+            //state.packet_client_amount = clients.Count;
+            //state.packet_clients = clients.ToArray();
         }
     }
 #endif

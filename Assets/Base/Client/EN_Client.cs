@@ -42,9 +42,23 @@ public class EN_Client : MonoBehaviour
     private uint tcpBytesIn = 0;
 
 
+    public static EN_Client Client;
+
+    public static EN_Client Contact()
+    {
+        if (Client == null)
+        {
+            Client = FindObjectOfType<EN_Client>();
+        }
+
+        return Client;
+    }
+
+
     private void Start()
     {
         Application.runInBackground = true;
+        Client = this;
 
         //TODO: Move Send/Translate UDP/TCP to EN_Protocol
         // It shouldn't bother the Unity code, really.
@@ -52,10 +66,10 @@ public class EN_Client : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (connected)
-        {
-            udp_client.Close();
-        }
+        udp_client.Close();
+        tcp_client.Client.Disconnect(true);
+        tcp_client.GetStream().Close();
+        tcp_client.Close();
     }
 
 
@@ -74,6 +88,13 @@ public class EN_Client : MonoBehaviour
         }
     }
 
+    public void SendUDP(object obj)
+    {
+        if (connected == false) { return; }
+
+        Debug.Log("Sent");
+        EN_Protocol.SendUDP(udp_client, obj);
+    }
 
     private void SendTCP(byte[] bytes)
     {
@@ -153,7 +174,7 @@ public class EN_Client : MonoBehaviour
     {
         if (type == EN_UDP_PACKET_TYPE.TRANSFORM)
         {
-
+            Debug.Log(bytes.Length);
         }
     }
 
@@ -193,8 +214,8 @@ public class EN_Client : MonoBehaviour
 
     public void ConnectClient()
     {
-        udp_client = new UdpClient();
-        tcp_client = new TcpClient();
+        udp_client = new UdpClient();// EN_ServerSettings.HOSTNAME, EN_ServerSettings.PORT);
+        tcp_client = new TcpClient();// EN_ServerSettings.HOSTNAME, EN_ServerSettings.PORT);
 
 
         server = new IPEndPoint(IPAddress.Parse(EN_ServerSettings.HOSTNAME), EN_ServerSettings.PORT);
@@ -204,13 +225,29 @@ public class EN_Client : MonoBehaviour
         EN_ClientSettings.CLIENT_GUID = Guid.NewGuid();
 
         EN_Protocol.Connect(udp_client, server);
-        EN_Protocol.Connect(tcp_client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID);
+        if (EN_Protocol.Connect(tcp_client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID) == false)
+        {
+            Debug.Log("Not connected");
+        }
 
         stream = tcp_client.GetStream();
 
         StartCoroutine(SendUDP(EN_ClientSettings.SEND_INTERVAL));
         StartCoroutine(ReceiveUDP());
         StartCoroutine(ReceiveTCP());
+
+        StartCoroutine(WaitForConnection(1.0f));
+    }
+
+    private IEnumerator WaitForConnection(float timer)
+    {
+        float t = 0.0f;
+        while (t < timer)
+        {
+            t += Time.deltaTime;
+
+            yield return null;
+        }
 
         connected = true;
     }
