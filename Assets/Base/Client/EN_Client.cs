@@ -34,6 +34,14 @@ public class EN_Client : MonoBehaviour
     public Text text_clients;
     public Text text_name;
 
+    public Text udp_in;
+    public Text tcp_in;
+
+    // Network Tracking
+    private uint udpBytesIn = 0;
+    private uint tcpBytesIn = 0;
+
+
     private void Start()
     {
         Application.runInBackground = true;
@@ -50,6 +58,7 @@ public class EN_Client : MonoBehaviour
         }
     }
 
+
     /*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
         Constantly send updates (translate/rotate etc)
         -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
@@ -59,6 +68,7 @@ public class EN_Client : MonoBehaviour
         {
             // Send text message every <interval> seconds
             //EN_Protocol.SendText(udp_client, "Hello!");
+
             //TODO: Send transform instead of text
             yield return new WaitForSeconds(interval);
         }
@@ -76,6 +86,24 @@ public class EN_Client : MonoBehaviour
         {
             EN_Protocol.SendTCP(stream, new EN_PacketMessage("Hello!"));
         }
+
+        udp_in.text = TrafficInUDP().ToString();
+        tcp_in.text = TrafficInTCP().ToString();
+
+        udpBytesIn = 0;
+        tcpBytesIn = 0;
+    }
+
+    private uint TrafficInUDP()
+    {
+        uint bytes = udpBytesIn;
+        return bytes;
+    }
+
+    private uint TrafficInTCP()
+    {
+        uint bytes = tcpBytesIn;
+        return bytes;
     }
 
 
@@ -91,6 +119,8 @@ public class EN_Client : MonoBehaviour
                 {
                     EN_UDP_PACKET_TYPE type = EN_Protocol.BytesToUDPType(bytes);
                     TranslateUDP(type, bytes);
+
+                    udpBytesIn += (uint)bytes.Length;
                 }
             }
 
@@ -113,6 +143,8 @@ public class EN_Client : MonoBehaviour
 
                 EN_TCP_PACKET_TYPE type = EN_Protocol.BytesToTCPType(bytes_data, 0);
                 TranslateTCP(type, bytes_data);
+
+                tcpBytesIn += (uint)bytes_size.Length + (uint)bytes_data.Length;
             }
             yield return null;
         }

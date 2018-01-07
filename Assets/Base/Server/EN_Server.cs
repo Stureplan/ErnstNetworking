@@ -63,14 +63,15 @@ namespace ErnstNetworking
         {
 
 
-            EN_ClientInfo c1 = new EN_ClientInfo(Guid.NewGuid(), "123");
+            /*EN_ClientInfo c1 = new EN_ClientInfo(Guid.NewGuid(), "123");
             EN_ClientInfo c2 = new EN_ClientInfo(Guid.NewGuid(), "123456");
 
             byte[] b1 = EN_Protocol.ObjectToBytes(c1);
             byte[] b2 = EN_Protocol.ObjectToBytes(c2);
 
             EN_ClientInfo bc1 = EN_Protocol.BytesToObject<EN_ClientInfo>(b1);
-            EN_ClientInfo bc2 = EN_Protocol.BytesToObject<EN_ClientInfo>(b2);
+            EN_ClientInfo bc2 = EN_Protocol.BytesToObject<EN_ClientInfo>(b2);*/
+
             //TODO: Marshal the shit out of these EN_ClientInfos.
             // This allows us to send them straight over the network as byte[] in sequence.
 

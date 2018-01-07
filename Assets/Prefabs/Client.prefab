@@ -53,3 +53,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   text_clients: {fileID: 0}
   text_name: {fileID: 0}
+  udp_in: {fileID: 0}
+  tcp_in: {fileID: 0}
