@@ -24,7 +24,7 @@ namespace ErnstNetworking
 
         UdpClient udp_server;
         TcpListener tcp_server;
-        IPEndPoint source;
+        IPEndPoint udp_source;
         List<IPEndPoint> udp_clients;
         List<TcpClient> tcp_clients;
         List<EN_ClientInfo> clients;
@@ -78,7 +78,7 @@ namespace ErnstNetworking
 
             udp_server = new UdpClient(EN_ServerSettings.PORT);
             tcp_server = new TcpListener(IPAddress.Any,EN_ServerSettings.PORT);
-            source = new IPEndPoint(IPAddress.Any, 0);
+            udp_source = new IPEndPoint(IPAddress.Any, 0);
             udp_clients = new List<IPEndPoint>();
             tcp_clients = new List<TcpClient>();
             packet_stack = new List<byte[]>();
@@ -162,7 +162,7 @@ namespace ErnstNetworking
         {
             if (udp_server.Available > 0)
             {
-                byte[] bytes = udp_server.Receive(ref source);
+                byte[] bytes = udp_server.Receive(ref udp_source);
 
                 if (bytes.Length > 0)
                 {
@@ -170,7 +170,7 @@ namespace ErnstNetworking
                     EN_UDP_PACKET_TYPE packet_type = EN_Protocol.BytesToUDPType(bytes);
 
                     // Print packet info
-                    Console.WriteLine("UDP " + source.Address.ToString() + ": " + TranslateUDP(source, packet_type, bytes));
+                    Console.WriteLine("UDP " + udp_source.Address.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
                 }
             }
         }
@@ -193,7 +193,7 @@ namespace ErnstNetworking
 
 
                     EN_TCP_PACKET_TYPE packet_type = EN_Protocol.BytesToTCPType(bytes_data, 0);
-                    Console.WriteLine("TCP " + ((IPEndPoint)tcp_clients[i].Client.RemoteEndPoint).Address.ToString() + ": " + TranslateTCP(tcp_clients[i], source, packet_type, bytes_data));
+                    Console.WriteLine("TCP " + ((IPEndPoint)tcp_clients[i].Client.RemoteEndPoint).Address.ToString() + ": " + TranslateTCP(tcp_clients[i], udp_source, packet_type, bytes_data));
                 }
             }
         }
