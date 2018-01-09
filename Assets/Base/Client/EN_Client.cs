@@ -216,8 +216,11 @@ public class EN_Client : MonoBehaviour
     {
         udp_client = new UdpClient();// EN_ServerSettings.HOSTNAME, EN_ServerSettings.PORT);
         tcp_client = new TcpClient();// EN_ServerSettings.HOSTNAME, EN_ServerSettings.PORT);
+        //tcp_client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
-        udp_client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
+
+
 
         server = new IPEndPoint(IPAddress.Parse(EN_ServerSettings.HOSTNAME), EN_ServerSettings.PORT);
         clients = new List<EN_ClientInfo>();
@@ -225,11 +228,20 @@ public class EN_Client : MonoBehaviour
         EN_ClientSettings.CLIENT_NAME = text_name.text;
         EN_ClientSettings.CLIENT_GUID = Guid.NewGuid();
 
-        EN_Protocol.Connect(udp_client, server);
         if (EN_Protocol.Connect(tcp_client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID) == false)
         {
-            Debug.Log("Not connected");
+            Debug.Log("Not connected (TCP)");
         }
+
+
+        IPEndPoint ep = (IPEndPoint)tcp_client.Client.LocalEndPoint;
+        int p = ep.Port;
+
+        udp_client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        udp_client.Client.Bind(new IPEndPoint(IPAddress.Any, p));
+        EN_Protocol.Connect(udp_client, server);
+
+
 
         stream = tcp_client.GetStream();
 

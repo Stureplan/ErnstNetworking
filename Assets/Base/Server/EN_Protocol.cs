@@ -114,7 +114,7 @@ namespace ErnstNetworking.Protocol
 
                 byte[] bytes = ObjectToBytes(packet);
 
-                client.Connect(server);
+                client.Client.Connect(server);
 
                 NetworkStream stream = client.GetStream();
                 stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);

@@ -136,12 +136,17 @@ namespace ErnstNetworking
             }
         }
 
-        private async void DiscoverClients()
+        private void DiscoverClients()
         {
+            if (tcp_server.Pending())
+            {
+                tcp_clients.Add(tcp_server.AcceptTcpClient());
+            }
+
             if (tcp_clients.Count < 8)
             {
-                TcpClient client = await tcp_server.AcceptTcpClientAsync();
-                tcp_clients.Add(client);
+                //TcpClient client = await tcp_server.AcceptTcpClientAsync();
+                //tcp_clients.Add(client);
             }
         }
 
@@ -183,9 +188,13 @@ namespace ErnstNetworking
                     EN_UDP_PACKET_TYPE packet_type = EN_Protocol.BytesToUDPType(bytes);
 
                     // Print packet info
-                    Console.WriteLine("UDP " + udp_source.Address.ToString() + ":" + udp_source.Port.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
+                    //Console.WriteLine("UDP " + udp_source.Address.ToString() + ":" + udp_source.Port.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
 
-                    
+                    IPEndPoint tcp_s = (IPEndPoint)tcp_clients[0].Client.RemoteEndPoint;
+                    if (udp_source.Equals(tcp_s))
+                    {
+                        Console.WriteLine("True");//IT WAS TRUE!
+                    }
                 }
             }
         }
@@ -210,7 +219,7 @@ namespace ErnstNetworking
                     EN_TCP_PACKET_TYPE packet_type = EN_Protocol.BytesToTCPType(bytes_data, 0);
 
                     IPEndPoint source = (IPEndPoint)tcp_clients[i].Client.RemoteEndPoint;
-                    Console.WriteLine("TCP " + (source.Address.ToString() + ": " + TranslateTCP(tcp_clients[i], packet_type, bytes_data)));
+                    Console.WriteLine("TCP " + (source.Address.ToString() + ":" + source.Port.ToString() + ": " + TranslateTCP(tcp_clients[i], packet_type, bytes_data)));
                 }
             }
         }
