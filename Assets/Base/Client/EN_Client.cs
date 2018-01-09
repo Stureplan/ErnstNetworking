@@ -93,7 +93,7 @@ public class EN_Client : MonoBehaviour
         if (connected == false) { return; }
 
         Debug.Log("Sent");
-        EN_Protocol.SendUDP(udp_client, obj);
+        EN_Protocol.SendUDP(udp_client,server, obj);
     }
 
     private void SendTCP(byte[] bytes)
@@ -217,6 +217,7 @@ public class EN_Client : MonoBehaviour
         udp_client = new UdpClient();// EN_ServerSettings.HOSTNAME, EN_ServerSettings.PORT);
         tcp_client = new TcpClient();// EN_ServerSettings.HOSTNAME, EN_ServerSettings.PORT);
 
+        udp_client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 
         server = new IPEndPoint(IPAddress.Parse(EN_ServerSettings.HOSTNAME), EN_ServerSettings.PORT);
         clients = new List<EN_ClientInfo>();

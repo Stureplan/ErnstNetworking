@@ -133,7 +133,7 @@ namespace ErnstNetworking.Protocol
             }
         }
 
-        public static void SendUDP(UdpClient client, object msg)
+        public static void SendUDP(UdpClient client, IPEndPoint ip, object msg)
         {
             byte[] bytes = ObjectToBytes(msg);
             client.Send(bytes, bytes.Length);

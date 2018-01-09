@@ -29,6 +29,9 @@ namespace ErnstNetworking
         List<TcpClient> tcp_clients;
         List<byte[]> packet_stack;
 
+        int loops = 0;
+        int poll_framerate = 100;
+
         private string IPConfig(string arg)
         {
             System.Diagnostics.Process cmd = new System.Diagnostics.Process();
@@ -75,7 +78,10 @@ namespace ErnstNetworking
             // This allows us to send them straight over the network as byte[] in sequence.
 
 
-            udp_server = new UdpClient(EN_ServerSettings.PORT);
+            udp_server = new UdpClient();
+            udp_server.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            udp_server.Client.Bind(new IPEndPoint(IPAddress.Any, EN_ServerSettings.PORT));
+
             tcp_server = new TcpListener(IPAddress.Any,EN_ServerSettings.PORT);
             udp_source = new IPEndPoint(IPAddress.Any, 0);
             udp_clients = new List<IPEndPoint>();
@@ -109,11 +115,17 @@ namespace ErnstNetworking
                 DiscoverClients();
 
                 // Check if clients have disconnected.
-                PollClients();
+                PollClients(loops);
 
                 // Receive messages over UDP & TCP
                 ReceiveUDP();
                 ReceiveTCP();
+
+                loops++;
+                if (loops > 999)
+                {
+                    loops = 0;
+                }
             }
 
             udp_server.Close();
@@ -133,16 +145,19 @@ namespace ErnstNetworking
             }
         }
 
-        private void PollClients()
+        private void PollClients(int loop)
         {
-            for (int i = 0; i < tcp_clients.Count; i++)
+            if (loop % poll_framerate == 0)
             {
-                if (tcp_clients[i].Client.Poll(0, SelectMode.SelectRead) == true)
+                for (int i = 0; i < tcp_clients.Count; i++)
                 {
-                    byte[] bytes = new byte[1];
-                    if (tcp_clients[i].Client.Receive(bytes, SocketFlags.Peek) == 0)
+                    if (tcp_clients[i].Client.Poll(0, SelectMode.SelectRead) == true)
                     {
-                        DisconnectClient(tcp_clients[i]);
+                        byte[] bytes = new byte[1];
+                        if (tcp_clients[i].Client.Receive(bytes, SocketFlags.Peek) == 0)
+                        {
+                            DisconnectClient(tcp_clients[i]);
+                        }
                     }
                 }
             }
@@ -151,13 +166,9 @@ namespace ErnstNetworking
         private void DisconnectClient(TcpClient client)
         {
             Console.WriteLine("SERVER: User disconnected.");
-
             client.Client.Disconnect(true);
-            client.GetStream().Close();
             client.Close();
             tcp_clients.Remove(client);
-
-
         }
 
         private void ReceiveUDP()
@@ -172,7 +183,9 @@ namespace ErnstNetworking
                     EN_UDP_PACKET_TYPE packet_type = EN_Protocol.BytesToUDPType(bytes);
 
                     // Print packet info
-                    Console.WriteLine("UDP " + udp_source.Address.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
+                    Console.WriteLine("UDP " + udp_source.Address.ToString() + ":" + udp_source.Port.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
+
+                    
                 }
             }
         }
@@ -250,14 +263,16 @@ namespace ErnstNetworking
 
         private void BroadcastUDP(IPEndPoint source, byte[] bytes)
         {
+            udp_server.Send(bytes, bytes.Length, source);
+
             for (int i = 0; i < udp_clients.Count; i++)
             {
                 if (source.Equals(udp_clients[i]) == false)
                 {
+
                     // Only broadcast to clients that didn't send the original UDP packet
                     //TODO: Here shit breaks down for some reason.
                     //disabling this broadcast stops all errors, so track it down.
-                    udp_server.Send(bytes, bytes.Length, udp_clients[i]);
                 }
             }
         }
