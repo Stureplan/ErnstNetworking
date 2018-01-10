@@ -187,14 +187,22 @@ namespace ErnstNetworking
                     // Get & translate first 4 bytes
                     EN_UDP_PACKET_TYPE packet_type = EN_Protocol.BytesToUDPType(bytes);
 
-                    // Print packet info
-                    //Console.WriteLine("UDP " + udp_source.Address.ToString() + ":" + udp_source.Port.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
-
-                    IPEndPoint tcp_s = (IPEndPoint)tcp_clients[0].Client.RemoteEndPoint;
-                    if (udp_source.Equals(tcp_s))
+                    // Algo for finding new UDP users, shouldn't be needed since we use same IP/PORT in TCP
+                    /*int count = udp_clients.Count;
+                    bool found = false;
+                    for (int i = 0; i < count; i++)
                     {
-                        Console.WriteLine("True");//IT WAS TRUE!
+                        if (udp_clients[i].Equals(udp_source) == true)
+                        {
+                            found = true;
+                            break;
+                        }
                     }
+                    if (found == false) { udp_clients.Add(udp_source); Console.WriteLine("UDP ADDED"); }
+                    */
+
+                    // Print packet info
+                    Console.WriteLine("UDP " + udp_source.Address.ToString() + ":" + udp_source.Port.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
                 }
             }
         }
@@ -272,16 +280,12 @@ namespace ErnstNetworking
 
         private void BroadcastUDP(IPEndPoint source, byte[] bytes)
         {
-            udp_server.Send(bytes, bytes.Length, source);
-
             for (int i = 0; i < udp_clients.Count; i++)
             {
                 if (source.Equals(udp_clients[i]) == false)
                 {
-
                     // Only broadcast to clients that didn't send the original UDP packet
-                    //TODO: Here shit breaks down for some reason.
-                    //disabling this broadcast stops all errors, so track it down.
+                    udp_server.Send(bytes, bytes.Length, udp_clients[i]);
                 }
             }
         }

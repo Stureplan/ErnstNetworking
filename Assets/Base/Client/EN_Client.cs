@@ -92,7 +92,6 @@ public class EN_Client : MonoBehaviour
     {
         if (connected == false) { return; }
 
-        Debug.Log("Sent");
         EN_Protocol.SendUDP(udp_client,server, obj);
     }
 
@@ -230,7 +229,8 @@ public class EN_Client : MonoBehaviour
 
         if (EN_Protocol.Connect(tcp_client, server, EN_ClientSettings.CLIENT_NAME, EN_ClientSettings.CLIENT_GUID) == false)
         {
-            Debug.Log("Not connected (TCP)");
+            Debug.Log("Not connected (TCP). Returning.");
+            return;
         }
 
 
