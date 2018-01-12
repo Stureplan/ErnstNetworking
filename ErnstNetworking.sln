@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2017
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErnstNetworking", "ErnstNetworking.csproj", "{3DF47450-961B-D1E3-CE22-F5A52E6BEACD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErnstNetworking.Editor", "ErnstNetworking.Editor.csproj", "{09D791DD-FD40-B112-6FA6-9840A251864D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{3DF47450-961B-D1E3-CE22-F5A52E6BEACD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DF47450-961B-D1E3-CE22-F5A52E6BEACD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3DF47450-961B-D1E3-CE22-F5A52E6BEACD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09D791DD-FD40-B112-6FA6-9840A251864D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09D791DD-FD40-B112-6FA6-9840A251864D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09D791DD-FD40-B112-6FA6-9840A251864D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09D791DD-FD40-B112-6FA6-9840A251864D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
