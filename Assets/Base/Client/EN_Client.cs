@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 using System;
 using System.Net;
@@ -42,6 +42,11 @@ public class EN_Client : MonoBehaviour
     private uint tcpBytesIn = 0;
 
 
+    // Debug Console
+    private static System.Diagnostics.Process cmd;
+    private static System.IO.StreamWriter console;
+
+
     public static EN_Client Client;
 
     public static EN_Client Contact()
@@ -52,6 +57,77 @@ public class EN_Client : MonoBehaviour
         }
 
         return Client;
+    }
+
+    private void Console()
+    {
+        cmd = new System.Diagnostics.Process();
+        cmd.StartInfo.FileName = Application.streamingAssetsPath + "/DebugConsole.exe";
+        cmd.StartInfo.UseShellExecute = false;
+        cmd.StartInfo.RedirectStandardInput = true;
+        cmd.Start();
+        
+        console = cmd.StandardInput;
+        console.AutoFlush = true;
+        console.Flush();
+    }
+
+    public static void ConsoleMessage(string msg)
+    {
+        if (Application.isEditor == true)
+        {
+            Debug.Log(msg);
+        }
+        else
+        {
+            console.Write(msg);
+            console.Write(Environment.NewLine);
+        }
+    }
+
+    public static void ConsoleExit()
+    {
+        if (cmd.HasExited == false)
+        {
+            console.Close();
+            cmd.CloseMainWindow();
+        }
+    }
+
+    private void OnSceneLoad(Scene scene, LoadSceneMode mode)
+    {
+        /*
+                if (Application.isEditor)
+                {
+                    EN_NetworkPrefabs.BuildPrefabListEditor();
+                }
+                else
+                {
+                    EN_NetworkPrefabs.BuildPrefabListStandalone();
+                    text_clients.text = "Standalone";
+                }*/
+
+        if (Application.isEditor == false)
+        {
+            Console();
+        }
+
+        ConsoleMessage("Testing Console");
+        EN_NetworkPrefabs.BuildPrefabList();
+
+
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoad;
+    }
+
+    private void OnDisable()
+    {
+        ConsoleExit();
+
+        SceneManager.sceneLoaded -= OnSceneLoad;
     }
 
 
@@ -66,10 +142,17 @@ public class EN_Client : MonoBehaviour
 
     private void OnDestroy()
     {
-        udp_client.Close();
-        tcp_client.Client.Disconnect(true);
-        tcp_client.GetStream().Close();
-        tcp_client.Close();
+        if (udp_client != null)
+        {
+            udp_client.Close();
+        }
+
+        if (tcp_client != null)
+        {
+            tcp_client.Client.Disconnect(true);
+            tcp_client.GetStream().Close();
+            tcp_client.Close();
+        }
     }
 
 

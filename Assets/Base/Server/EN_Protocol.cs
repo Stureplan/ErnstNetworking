@@ -125,10 +125,12 @@ namespace ErnstNetworking.Protocol
             catch(SocketException e)
             {
                 //not connected
+                string s = e.Message;
                 return false;
             }
             catch(Exception e)
             {
+                string s = e.Message;
                 return false;
             }
         }
