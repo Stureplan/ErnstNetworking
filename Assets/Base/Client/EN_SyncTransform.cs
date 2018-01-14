@@ -4,15 +4,13 @@ using ErnstNetworking.Protocol;
 
 public class EN_SyncTransform : MonoBehaviour 
 {
-    private uint network_id;
-
     public int syncFrameRate = 1;
     private int frame = 0;
+    private int instanceID = -1;
 
     private void Start()
     {
-        EN_NetworkObject obj = GetComponent<EN_NetworkObject>();
-        network_id = obj.network_id;
+        instanceID = gameObject.GetInstanceID();
     }
 
     private void Update()
@@ -36,7 +34,7 @@ public class EN_SyncTransform : MonoBehaviour
 
         EN_PacketTransform data;
         data.packet_type = EN_UDP_PACKET_TYPE.TRANSFORM;
-        data.packet_network_id = network_id;
+        data.packet_network_id = instanceID;
         data.tX = pos.x; data.tY = pos.y; data.tZ = pos.z;
         data.rX = rot.x; data.rY = rot.y; data.rZ = rot.z;
 

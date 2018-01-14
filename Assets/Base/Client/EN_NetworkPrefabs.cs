@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
+using ErnstNetworking.Protocol;
+
 [CreateAssetMenu(fileName = "EN_NetworkPrefabs", menuName = "ErnstNetworking/Create Network Prefab List", order = 52)]
 public class EN_NetworkPrefabs : ScriptableObject
 {

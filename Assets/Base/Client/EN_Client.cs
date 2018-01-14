@@ -189,6 +189,23 @@ public class EN_Client : MonoBehaviour
         {
             EN_Protocol.SendTCP(stream, new EN_PacketMessage("Hello!"));
         }
+        if (Input.GetKeyDown(KeyCode.F1))
+        {
+            GameObject go = Instantiate(EN_NetworkPrefabs.Prefab(EN_PREFABS.Cube), Vector3.zero, Quaternion.identity);
+            go.AddComponent<EN_SyncTransform>();
+
+            Vector3 pos = go.transform.position;
+            Vector3 rot = go.transform.rotation.eulerAngles;
+
+            EN_PacketSpawnObject packet;
+            packet.packet_type = EN_TCP_PACKET_TYPE.SPAWN_OBJECT;
+            packet.packet_prefab = EN_PREFABS.Cube;
+            packet.packet_network_id = go.GetInstanceID();
+            packet.tX = pos.x; packet.tY = pos.y; packet.tZ = pos.z;
+            packet.rX = rot.x; packet.rY = rot.y; packet.rZ = rot.z;
+
+            EN_Protocol.SendTCP(stream, packet);
+        }
 
         udp_in.text = TrafficInUDP().ToString();
         tcp_in.text = TrafficInTCP().ToString();
@@ -256,6 +273,16 @@ public class EN_Client : MonoBehaviour
     {
         if (type == EN_UDP_PACKET_TYPE.TRANSFORM)
         {
+            EN_PacketTransform packet = EN_Protocol.BytesToObject<EN_PacketTransform>(bytes);
+            Vector3 pos = new Vector3(packet.tX, packet.tY, packet.tZ);
+            Quaternion rot = Quaternion.Euler(packet.rX, packet.rY, packet.rZ);
+
+            GameObject go = EN_NetworkObject.Find(packet.packet_network_id);
+            if (go != null)
+            {
+                go.transform.position = pos;
+                go.transform.rotation = rot;
+            }
         }
     }
 
@@ -276,6 +303,19 @@ public class EN_Client : MonoBehaviour
         if (type == EN_TCP_PACKET_TYPE.GAME_STATE)
         {
             EN_PacketGameState packet = EN_Protocol.BytesToObject<EN_PacketGameState>(bytes);
+        }
+        if (type == EN_TCP_PACKET_TYPE.SPAWN_OBJECT)
+        {
+            EN_PacketSpawnObject packet = EN_Protocol.BytesToObject<EN_PacketSpawnObject>(bytes);
+            Vector3 pos = new Vector3(packet.tX, packet.tY, packet.tZ);
+            Quaternion rot = Quaternion.Euler(packet.rX, packet.rY, packet.rZ);
+
+            GameObject go = Instantiate(EN_NetworkPrefabs.Prefab(packet.packet_prefab), pos, rot);
+            go.AddComponent<EN_NetworkObject>().network_id = packet.packet_network_id;
+
+            EN_NetworkObject.Add(packet.packet_network_id, go);
+
+            ConsoleMessage(string.Format("Spawned {0} with network ID {1}", go.name, packet.packet_network_id));
         }
     }
 

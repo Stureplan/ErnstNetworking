@@ -3,10 +3,14 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 
-using ErnstNetworking.Client;
-
 namespace ErnstNetworking.Protocol
 {
+    public enum EN_PREFABS
+    {
+        Client = 0,
+        Cube
+    }
+
     public enum EN_UDP_PACKET_TYPE
     {
         TRANSFORM = 0
@@ -16,7 +20,8 @@ namespace ErnstNetworking.Protocol
     {
         CONNECT = 0,
         MESSAGE,
-        GAME_STATE
+        GAME_STATE,
+        SPAWN_OBJECT
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -55,7 +60,7 @@ namespace ErnstNetworking.Protocol
     struct EN_PacketTransform
     {
         public EN_UDP_PACKET_TYPE   packet_type;
-        public uint                 packet_network_id;
+        public int                  packet_network_id;
         //public Guid                 packet_client_guid;
 
         public float tX; public float tY; public float tZ;
@@ -97,7 +102,7 @@ namespace ErnstNetworking.Protocol
     {
         public EN_TCP_PACKET_TYPE   packet_type;
         public EN_PREFABS           packet_prefab;
-        public uint                 packet_network_id;
+        public int                  packet_network_id;
 
         public float tX; public float tY; public float tZ;
         public float rX; public float rY; public float rZ;

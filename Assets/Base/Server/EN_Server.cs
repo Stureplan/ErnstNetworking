@@ -29,6 +29,9 @@ namespace ErnstNetworking
         List<TcpClient> tcp_clients;
         List<byte[]> packet_stack;
 
+        Dictionary<int, int> networkIDs;
+        int current_networkID = -1;
+
         int loops = 0;
         int poll_framerate = 100;
 
@@ -87,6 +90,7 @@ namespace ErnstNetworking
             udp_clients = new List<IPEndPoint>();
             tcp_clients = new List<TcpClient>();
             packet_stack = new List<byte[]>();
+            networkIDs = new Dictionary<int, int>();
 
             Console.WriteLine("\t\t::ErnstNetworking Server::\n");
             Console.Write("Your external IP is: ");
@@ -118,7 +122,7 @@ namespace ErnstNetworking
                 PollClients(loops);
 
                 // Receive messages over UDP & TCP
-                ReceiveUDP();
+                ReceiveUDP(loops);
                 ReceiveTCP();
 
                 loops++;
@@ -176,11 +180,17 @@ namespace ErnstNetworking
             tcp_clients.Remove(client);
         }
 
-        private void ReceiveUDP()
+        private void ReceiveUDP(int loops)
         {
             if (udp_server.Available > 0)
             {
+                if (loops % 100 == 0) { Console.WriteLine(udp_server.Available); }
                 byte[] bytes = udp_server.Receive(ref udp_source);
+
+                if (bytes.Length > 200)
+                {
+                    int breakpoint = 1;
+                }
 
                 if (bytes.Length > 0)
                 {
@@ -203,6 +213,7 @@ namespace ErnstNetworking
 
                     // Print packet info
                     //Console.WriteLine("UDP " + udp_source.Address.ToString() + ":" + udp_source.Port.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
+                    TranslateUDP(udp_source, packet_type, bytes);
                 }
             }
         }
@@ -238,9 +249,15 @@ namespace ErnstNetworking
             if (type == EN_UDP_PACKET_TYPE.TRANSFORM)
             {
                 EN_PacketTransform packet = EN_Protocol.BytesToObject<EN_PacketTransform>(bytes);
-                BroadcastUDP(source, bytes);
 
-                s = packet.ToReadable();
+                // This comes in as a Unity InstanceID, we need to networkID-it
+                packet.packet_network_id = networkIDs[packet.packet_network_id];
+
+                byte[] bytes_data = EN_Protocol.ObjectToBytes(packet);
+
+                BroadcastUDP(source, bytes_data);
+
+                //s = packet.ToReadable();
             }
 
             return s;
@@ -257,7 +274,7 @@ namespace ErnstNetworking
                 ResendStackTCP(client);
 
                 // Send out this connection packet to the rest of the clients
-                BroadcastTCP(bytes);
+                BroadcastTCP(client, bytes);
 
                 // Add connect request to the stack of important messages
                 packet_stack.Add(bytes);
@@ -273,6 +290,21 @@ namespace ErnstNetworking
             {
                 EN_PacketMessage packet = EN_Protocol.BytesToObject<EN_PacketMessage>(bytes);
                 s = packet.packet_message;
+            }
+            if(type == EN_TCP_PACKET_TYPE.SPAWN_OBJECT)
+            {
+                EN_PacketSpawnObject packet = EN_Protocol.BytesToObject<EN_PacketSpawnObject>(bytes);
+
+                current_networkID++;
+                networkIDs.Add(packet.packet_network_id, current_networkID);
+
+                packet.packet_network_id = networkIDs[packet.packet_network_id];
+
+                byte[] bytes_data = EN_Protocol.ObjectToBytes(packet);
+
+                BroadcastTCP(client, bytes_data);
+
+                s = packet.packet_prefab + " with network ID " + packet.packet_network_id + " was spawned.";
             }
 
             return s;
@@ -290,14 +322,18 @@ namespace ErnstNetworking
             }
         }
 
-        private void BroadcastTCP(byte[] bytes)
+        private void BroadcastTCP(TcpClient source, byte[] bytes)
         {
             for (int i = 0; i < tcp_clients.Count; i++)
             {
-                NetworkStream stream = tcp_clients[i].GetStream();
-                
-                stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
-                stream.Write(bytes, 0, bytes.Length);
+                if (source.Equals(tcp_clients[i]) == false)
+                {
+                    // Only broadcast to clients that didn't send the original TCP packet
+                    NetworkStream stream = tcp_clients[i].GetStream();
+
+                    stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
+                    stream.Write(bytes, 0, bytes.Length);
+                }
             }
         }
 

@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
-
-using ErnstNetworking.Client;
+using ErnstNetworking.Protocol;
 
 public class EN_PrefabType : MonoBehaviour 
 {

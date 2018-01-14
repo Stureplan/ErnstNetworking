@@ -1,17 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+
+using ErnstNetworking.Protocol;
 
 public class EN_NetworkObject : MonoBehaviour 
 {
-    // Global ID count
-    public static uint NetworkIDs = 0;
+    public int network_id;
 
-    // Current Network ID
-    public uint network_id;
-
-    private void Start()
+    private static Dictionary<int, GameObject> networkObjects = new Dictionary<int, GameObject>();
+    public static void Add(int id, GameObject go)
     {
-        network_id = NetworkIDs;
+        networkObjects.Add(id, go);
+    }
+    public static GameObject Find(int id)
+    {
+        return networkObjects[id];
     }
 }
