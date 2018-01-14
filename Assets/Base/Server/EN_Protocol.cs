@@ -3,6 +3,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 
+using ErnstNetworking.Client;
+
 namespace ErnstNetworking.Protocol
 {
     public enum EN_UDP_PACKET_TYPE
@@ -53,7 +55,7 @@ namespace ErnstNetworking.Protocol
     struct EN_PacketTransform
     {
         public EN_UDP_PACKET_TYPE   packet_type;
-        public int                  packet_object;
+        public uint                 packet_network_id;
         //public Guid                 packet_client_guid;
 
         public float tX; public float tY; public float tZ;
@@ -89,6 +91,16 @@ namespace ErnstNetworking.Protocol
             packet_type = EN_TCP_PACKET_TYPE.MESSAGE;
             packet_message = msg;
         }
+    }
+
+    struct EN_PacketSpawnObject
+    {
+        public EN_TCP_PACKET_TYPE   packet_type;
+        public EN_PREFABS           packet_prefab;
+        public uint                 packet_network_id;
+
+        public float tX; public float tY; public float tZ;
+        public float rX; public float rY; public float rZ;
     }
 
     public class EN_Protocol

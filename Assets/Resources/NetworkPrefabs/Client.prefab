@@ -20,6 +20,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4249285284603500}
   - component: {fileID: 114360600745989664}
+  - component: {fileID: 114980083881033052}
   m_Layer: 0
   m_Name: Client
   m_TagString: Untagged
@@ -55,3 +56,15 @@ MonoBehaviour:
   text_name: {fileID: 0}
   udp_in: {fileID: 0}
   tcp_in: {fileID: 0}
+--- !u!114 &114980083881033052
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1099125309952076}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8d90d54d72eafa4a9fdcc231866708d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  type: 0

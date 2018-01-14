@@ -202,7 +202,7 @@ namespace ErnstNetworking
                     */
 
                     // Print packet info
-                    Console.WriteLine("UDP " + udp_source.Address.ToString() + ":" + udp_source.Port.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
+                    //Console.WriteLine("UDP " + udp_source.Address.ToString() + ":" + udp_source.Port.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
                 }
             }
         }

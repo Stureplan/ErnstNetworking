@@ -87,10 +87,13 @@ public class EN_Client : MonoBehaviour
 
     public static void ConsoleExit()
     {
-        if (cmd.HasExited == false)
+        if (cmd != null)
         {
-            console.Close();
-            cmd.CloseMainWindow();
+            if (cmd.HasExited == false)
+            {
+                console.Close();
+                cmd.CloseMainWindow();
+            }
         }
     }
 
@@ -112,10 +115,7 @@ public class EN_Client : MonoBehaviour
             Console();
         }
 
-        ConsoleMessage("Testing Console");
         EN_NetworkPrefabs.BuildPrefabList();
-
-
     }
 
     private void OnEnable()
@@ -256,7 +256,6 @@ public class EN_Client : MonoBehaviour
     {
         if (type == EN_UDP_PACKET_TYPE.TRANSFORM)
         {
-            Debug.Log(bytes.Length);
         }
     }
 

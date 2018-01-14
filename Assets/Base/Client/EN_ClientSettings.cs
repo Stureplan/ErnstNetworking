@@ -2,6 +2,12 @@
 
 namespace ErnstNetworking.Client
 {
+    public enum EN_PREFABS
+    {
+        Client = 0,
+        Cube
+    }
+
     public static class EN_ClientSettings
     {
         public static string CLIENT_NAME = "Client";

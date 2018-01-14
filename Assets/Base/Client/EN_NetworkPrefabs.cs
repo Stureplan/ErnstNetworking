@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using ErnstNetworking.Client;
+using System.Collections.Generic;
+using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -7,7 +9,9 @@ using UnityEditor;
 [CreateAssetMenu(fileName = "EN_NetworkPrefabs", menuName = "ErnstNetworking/Create Network Prefab List", order = 52)]
 public class EN_NetworkPrefabs : ScriptableObject
 {
-    public GameObject[] networkPrefabs;
+    private Dictionary<EN_PREFABS, GameObject> networkPrefabs;
+
+    private static EN_NetworkPrefabs instance;
 
     public static void BuildPrefabList()
     {
@@ -23,28 +27,45 @@ public class EN_NetworkPrefabs : ScriptableObject
 
             // Find game path through asset
             string asset = AssetDatabase.GUIDToAssetPath(assets[0]);
-            EN_NetworkPrefabs prefabs = AssetDatabase.LoadAssetAtPath<EN_NetworkPrefabs>(asset);
-            prefabs.networkPrefabs = Resources.LoadAll<GameObject>("NetworkPrefabs");
+            EN_NetworkPrefabs prefabs_editor = AssetDatabase.LoadAssetAtPath<EN_NetworkPrefabs>(asset);
+            prefabs_editor.networkPrefabs = new Dictionary<EN_PREFABS, GameObject>();
+            GameObject[] prefabs = Resources.LoadAll<GameObject>("NetworkPrefabs");
 
-
+            for (int i = 0; i < prefabs.Length; i++)
+            {
+                EN_PrefabType prefab = prefabs[i].GetComponent<EN_PrefabType>();
+                prefabs_editor.networkPrefabs.Add(prefab.type, prefabs[i]);
+            }
 
             AssetDatabase.Refresh();
-            EditorUtility.SetDirty(prefabs);
+            EditorUtility.SetDirty(prefabs_editor);
             AssetDatabase.SaveAssets();
+
+            instance = prefabs_editor;
 #endif
         }
         else
         {
             EN_NetworkPrefabs prefabs_build = Resources.Load<EN_NetworkPrefabs>("NetworkDatabase/EN_NetworkPrefabs");
-            prefabs_build.networkPrefabs = Resources.LoadAll<GameObject>("NetworkPrefabs");
+            prefabs_build.networkPrefabs = new Dictionary<EN_PREFABS, GameObject>();
+            GameObject[] prefabs = Resources.LoadAll<GameObject>("NetworkPrefabs");
 
-            EN_Client.ConsoleMessage(prefabs_build.networkPrefabs.Length.ToString());
-
-            for (int i = 0; i < prefabs_build.networkPrefabs.Length; i++)
+            for (int i = 0; i < prefabs.Length; i++)
             {
-                Instantiate(prefabs_build.networkPrefabs[i], Vector3.zero + (Vector3.right * i * 1.0f), Quaternion.identity);
+                EN_PrefabType prefab = prefabs[i].GetComponent<EN_PrefabType>();
+                prefabs_build.networkPrefabs.Add(prefab.type, prefabs[i]);
             }
+
+            EN_Client.ConsoleMessage(prefabs_build.networkPrefabs.Count.ToString());
+
+            instance = prefabs_build;
         }
 
     }
+
+    public static GameObject Prefab(EN_PREFABS type)
+    {
+        return instance.networkPrefabs[type];
+    }
+
 }
