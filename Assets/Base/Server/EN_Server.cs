@@ -82,6 +82,7 @@ namespace ErnstNetworking
 
 
             udp_server = new UdpClient();
+            udp_server.Client.IOControl((IOControlCode)EN_ServerSettings.SIO_UDP_CONNRESET, new byte[] { 0, 0, 0, 0 }, null);
             udp_server.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             udp_server.Client.Bind(new IPEndPoint(IPAddress.Any, EN_ServerSettings.PORT));
 
@@ -174,10 +175,13 @@ namespace ErnstNetworking
 
         private void DisconnectClient(TcpClient client)
         {
-            Console.WriteLine("SERVER: User disconnected.");
+            IPEndPoint ep = (IPEndPoint)client.Client.RemoteEndPoint;
+
+            Console.WriteLine(string.Format("{0}:{1}: User disconnected.", ep.Address.ToString(), ep.Port.ToString()));
             client.Client.Disconnect(true);
             client.Close();
             tcp_clients.Remove(client);
+            udp_clients.Remove(ep);
         }
 
         private void ReceiveUDP(int loops)
@@ -185,12 +189,7 @@ namespace ErnstNetworking
             if (udp_server.Available > 0)
             {
                 if (loops % 100 == 0) { Console.WriteLine(udp_server.Available); }
-                byte[] bytes = udp_server.Receive(ref udp_source);
-
-                if (bytes.Length > 200)
-                {
-                    int breakpoint = 1;
-                }
+                byte[] bytes = udp_server.Receive(ref udp_source); //TODO: If Receive fails again after DC, try {} catch {} and spit it into console
 
                 if (bytes.Length > 0)
                 {
@@ -274,7 +273,7 @@ namespace ErnstNetworking
                 ResendStackTCP(client);
 
                 // Send out this connection packet to the rest of the clients
-                BroadcastTCP(client, bytes);
+                BroadcastAllTCP(bytes);
 
                 // Add connect request to the stack of important messages
                 packet_stack.Add(bytes);
@@ -334,6 +333,18 @@ namespace ErnstNetworking
                     stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
                     stream.Write(bytes, 0, bytes.Length);
                 }
+            }
+        }
+
+        private void BroadcastAllTCP(byte[] bytes)
+        {
+            for (int i = 0; i < tcp_clients.Count; i++)
+            {
+                // Broadcast to all
+                NetworkStream stream = tcp_clients[i].GetStream();
+
+                stream.Write(BitConverter.GetBytes(bytes.Length), 0, 4);
+                stream.Write(bytes, 0, bytes.Length);
             }
         }
 

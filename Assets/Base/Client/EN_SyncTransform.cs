@@ -4,7 +4,9 @@ using ErnstNetworking.Protocol;
 
 public class EN_SyncTransform : MonoBehaviour 
 {
+    [Header("Network Traffic Framerate (Higher = Less traffic)")]
     public int syncFrameRate = 1;
+
     private int frame = 0;
     private int instanceID = -1;
 
