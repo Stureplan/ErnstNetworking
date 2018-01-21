@@ -186,7 +186,7 @@ public class EN_Client : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F1))
         {
             GameObject go = Instantiate(EN_NetworkPrefabs.Prefab(EN_PREFABS.Cube), Vector3.zero, Quaternion.identity);
-            go.AddComponent<EN_SyncTransform>().syncFrameRate = 5;
+            go.AddComponent<EN_SyncTransform>().syncFrameRate = 10;
             go.GetComponent<EN_SyncTransformClient>().enabled = false;
 
             Vector3 pos = go.transform.position;
@@ -269,14 +269,11 @@ public class EN_Client : MonoBehaviour
         if (type == EN_UDP_PACKET_TYPE.TRANSFORM)
         {
             EN_PacketTransform packet = EN_Protocol.BytesToObject<EN_PacketTransform>(bytes);
-            Vector3 pos = new Vector3(packet.tX, packet.tY, packet.tZ);
-            Quaternion rot = Quaternion.Euler(packet.rX, packet.rY, packet.rZ);
-            Vector3 vel = new Vector3(packet.vX, packet.vY, packet.vZ);
 
             GameObject go = EN_NetworkObject.Find(packet.packet_network_id);
             if (go != null)
             {
-                go.GetComponent<EN_SyncTransformClient>().Translate(packet.tX, packet.tY, packet.tZ, packet.rX, packet.rY, packet.rZ);
+                go.GetComponent<EN_SyncTransformClient>().Translate(packet.tX, packet.tY, packet.tZ, packet.rX, packet.rY, packet.rZ, packet.vX, packet.vY, packet.vZ);
 
                 //go.transform.position = Vector3.Lerp(pos, pos - vel, Time.deltaTime);
                 //go.transform.position = Vector3.Lerp(go.transform.position, pos, Time.deltaTime*10); //, pos + vel, Time.deltaTime); <-- plus velocity to anticipate movement

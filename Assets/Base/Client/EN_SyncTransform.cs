@@ -39,17 +39,18 @@ public class EN_SyncTransform : MonoBehaviour
             }
 
             SendUDP();
+            lastpos = transform.position;
         }
 
-        lastpos = transform.position;
     }
 
     private void SendUDP()
     {
         Vector3 pos = transform.position;
         Vector3 rot = transform.rotation.eulerAngles;
-        Vector3 vel = (transform.position - lastpos).normalized;
+        Vector3 vel = (transform.position - lastpos).normalized*Vector3.Distance(transform.position, lastpos);
         velocity = vel;
+        Debug.Log(vel);
 
         EN_PacketTransform data;
         data.packet_type = EN_UDP_PACKET_TYPE.TRANSFORM;
