@@ -10,6 +10,10 @@ public class EN_NetworkObject : MonoBehaviour
     {
         networkObjects.Add(id, go);
     }
+    public static void Remove(int id)
+    {
+        networkObjects.Remove(id);
+    }
     public static GameObject Find(int id)
     {
         return networkObjects[id];

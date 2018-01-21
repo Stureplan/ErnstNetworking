@@ -167,6 +167,7 @@ namespace ErnstNetworking
                         byte[] bytes = new byte[1];
                         if (tcp_clients[i].Client.Receive(bytes, SocketFlags.Peek) == 0)
                         {
+                            //TODO: Construct EN_PacketDisconnect and logic behind it
                             DisconnectClient(tcp_clients[i]);
                         }
                     }
@@ -189,7 +190,6 @@ namespace ErnstNetworking
         {
             if (udp_server.Available > 0)
             {
-                if (loops % 100 == 0) { /*Console.WriteLine(udp_server.Available);*/ }
                 byte[] bytes = udp_server.Receive(ref udp_source); //TODO: If Receive fails again after DC, try {} catch {} and spit it into console
 
                 if (bytes.Length > 0)
@@ -197,22 +197,6 @@ namespace ErnstNetworking
                     // Get & translate first 4 bytes
                     EN_UDP_PACKET_TYPE packet_type = EN_Protocol.BytesToUDPType(bytes);
 
-                    // Algo for finding new UDP users, shouldn't be needed since we use same IP/PORT in TCP
-                    /*int count = udp_clients.Count;
-                    bool found = false;
-                    for (int i = 0; i < count; i++)
-                    {
-                        if (udp_clients[i].Equals(udp_source) == true)
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found == false) { udp_clients.Add(udp_source); Console.WriteLine("UDP ADDED"); }
-                    */
-
-                    // Print packet info
-                    //Console.WriteLine("UDP " + udp_source.Address.ToString() + ":" + udp_source.Port.ToString() + ": " + TranslateUDP(udp_source, packet_type, bytes));
                     TranslateUDP(udp_source, packet_type, bytes);
                 }
             }
@@ -243,9 +227,8 @@ namespace ErnstNetworking
             }
         }
 
-        private string TranslateUDP(IPEndPoint source, EN_UDP_PACKET_TYPE type, byte[] bytes)
+        private void TranslateUDP(IPEndPoint source, EN_UDP_PACKET_TYPE type, byte[] bytes)
         {
-            string s = "";
             if (type == EN_UDP_PACKET_TYPE.TRANSFORM)
             {
                 EN_PacketTransform packet = EN_Protocol.BytesToObject<EN_PacketTransform>(bytes);
@@ -256,11 +239,7 @@ namespace ErnstNetworking
                 byte[] bytes_data = EN_Protocol.ObjectToBytes(packet);
 
                 BroadcastUDP(source, bytes_data);
-
-                //s = packet.ToReadable();
             }
-
-            return s;
         }
 
         private string TranslateTCP(TcpClient client, EN_TCP_PACKET_TYPE type, byte[] bytes)
@@ -305,6 +284,18 @@ namespace ErnstNetworking
                 BroadcastTCP(client, bytes_data);
 
                 s = packet.packet_prefab + " with network ID " + packet.packet_network_id + " was spawned.";
+            }
+            if (type == EN_TCP_PACKET_TYPE.REMOVE_OBJECT)
+            {
+                EN_PacketRemoveObject packet = EN_Protocol.BytesToObject<EN_PacketRemoveObject>(bytes);
+
+                packet.packet_network_id = networkIDs[packet.packet_network_id];
+
+                byte[] bytes_data = EN_Protocol.ObjectToBytes(packet);
+
+                BroadcastTCP(client, bytes_data);
+
+                s = "Prefab with network ID " + packet.packet_network_id + " was removed.";
             }
 
             return s;
@@ -390,4 +381,21 @@ namespace ErnstNetworking
                     byte b = newID[i];
                     bytes[4 + i] = b;
                 }
+*/
+
+
+
+
+// Algo for finding new UDP users, shouldn't be needed since we use same IP/PORT in TCP
+/*int count = udp_clients.Count;
+bool found = false;
+for (int i = 0; i < count; i++)
+{
+    if (udp_clients[i].Equals(udp_source) == true)
+    {
+        found = true;
+        break;
+    }
+}
+if (found == false) { udp_clients.Add(udp_source); Console.WriteLine("UDP ADDED"); }
 */

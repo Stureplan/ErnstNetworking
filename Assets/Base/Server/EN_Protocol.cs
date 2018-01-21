@@ -21,7 +21,8 @@ namespace ErnstNetworking.Protocol
         CONNECT = 0,
         MESSAGE,
         GAME_STATE,
-        SPAWN_OBJECT
+        SPAWN_OBJECT,
+        REMOVE_OBJECT
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -107,6 +108,12 @@ namespace ErnstNetworking.Protocol
 
         public float tX; public float tY; public float tZ;
         public float rX; public float rY; public float rZ;
+    }
+
+    struct EN_PacketRemoveObject
+    {
+        public EN_TCP_PACKET_TYPE   packet_type;
+        public int                  packet_network_id;
     }
 
     public class EN_Protocol

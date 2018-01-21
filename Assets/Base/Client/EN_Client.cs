@@ -201,6 +201,26 @@ public class EN_Client : MonoBehaviour
 
             EN_Protocol.SendTCP(stream, packet);
         }
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            //remove
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                int id = hit.transform.gameObject.GetInstanceID();
+                Destroy(hit.transform.gameObject);
+
+
+                EN_PacketRemoveObject packet;
+                packet.packet_type = EN_TCP_PACKET_TYPE.REMOVE_OBJECT;
+                packet.packet_network_id = id;
+
+                EN_Protocol.SendTCP(stream, packet);
+            }
+
+        }
 
         udp_in.text = TrafficInUDP().ToString();
         tcp_in.text = TrafficInTCP().ToString();
@@ -274,12 +294,6 @@ public class EN_Client : MonoBehaviour
             if (go != null)
             {
                 go.GetComponent<EN_SyncTransformClient>().Translate(packet.tX, packet.tY, packet.tZ, packet.rX, packet.rY, packet.rZ, packet.vX, packet.vY, packet.vZ);
-
-                //go.transform.position = Vector3.Lerp(pos, pos - vel, Time.deltaTime);
-                //go.transform.position = Vector3.Lerp(go.transform.position, pos, Time.deltaTime*10); //, pos + vel, Time.deltaTime); <-- plus velocity to anticipate movement
-
-                //go.transform.position = pos;
-                //go.transform.rotation = rot;
             }
         }
     }
@@ -305,15 +319,25 @@ public class EN_Client : MonoBehaviour
         if (type == EN_TCP_PACKET_TYPE.SPAWN_OBJECT)
         {
             EN_PacketSpawnObject packet = EN_Protocol.BytesToObject<EN_PacketSpawnObject>(bytes);
-            Vector3 pos = new Vector3(packet.tX, packet.tY, packet.tZ);
-            Quaternion rot = Quaternion.Euler(packet.rX, packet.rY, packet.rZ);
-
-            GameObject go = Instantiate(EN_NetworkPrefabs.Prefab(packet.packet_prefab), pos, rot);
+            Vector3     pos = new Vector3(packet.tX, packet.tY, packet.tZ);
+            Quaternion  rot = Quaternion.Euler(packet.rX, packet.rY, packet.rZ);
+            GameObject  go = Instantiate(EN_NetworkPrefabs.Prefab(packet.packet_prefab), pos, rot);
             go.AddComponent<EN_NetworkObject>().network_id = packet.packet_network_id;
 
             EN_NetworkObject.Add(packet.packet_network_id, go);
 
             ConsoleMessage(string.Format("Spawned {0} with network ID {1}", go.name, packet.packet_network_id));
+        }
+        if (type == EN_TCP_PACKET_TYPE.REMOVE_OBJECT)
+        {
+            EN_PacketRemoveObject packet = EN_Protocol.BytesToObject<EN_PacketRemoveObject>(bytes);
+
+            GameObject go = EN_NetworkObject.Find(packet.packet_network_id);
+            string n = go.name;
+            EN_NetworkObject.Remove(packet.packet_network_id);
+            Destroy(go);
+
+            ConsoleMessage(string.Format("Removed {0} with network ID {1}", n, packet.packet_network_id));
         }
     }
 
