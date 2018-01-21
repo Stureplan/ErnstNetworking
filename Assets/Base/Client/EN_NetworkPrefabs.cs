@@ -58,8 +58,6 @@ public class EN_NetworkPrefabs : ScriptableObject
                 prefabs_build.networkPrefabs.Add(prefab.type, prefabs[i]);
             }
 
-            EN_Client.ConsoleMessage(prefabs_build.networkPrefabs.Count.ToString());
-
             instance = prefabs_build;
         }
 

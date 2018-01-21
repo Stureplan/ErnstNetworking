@@ -65,6 +65,7 @@ namespace ErnstNetworking.Protocol
 
         public float tX; public float tY; public float tZ;
         public float rX; public float rY; public float rZ;
+        public float vX; public float vY; public float vZ;
 
         public string ToReadable()
         {

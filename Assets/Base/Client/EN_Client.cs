@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 using ErnstNetworking.Server;
 using ErnstNetworking.Client;
@@ -45,6 +46,10 @@ public class EN_Client : MonoBehaviour
     // Debug Console
     private static System.Diagnostics.Process cmd;
     private static System.IO.StreamWriter console;
+
+
+
+    // Issue Tracking
 
 
     public static EN_Client Client;
@@ -138,6 +143,7 @@ public class EN_Client : MonoBehaviour
 
         //TODO: Move Send/Translate UDP/TCP to EN_Protocol
         // It shouldn't bother the Unity code, really.
+
     }
 
     private void OnDestroy()
@@ -159,18 +165,6 @@ public class EN_Client : MonoBehaviour
     /*  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
         Constantly send updates (translate/rotate etc)
         -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  */
-    private IEnumerator SendUDP(float interval)
-    {
-        while (true)
-        {
-            // Send text message every <interval> seconds
-            //EN_Protocol.SendText(udp_client, "Hello!");
-
-            //TODO: Send transform instead of text
-            yield return new WaitForSeconds(interval);
-        }
-    }
-
     public void SendUDP(object obj)
     {
         if (connected == false) { return; }
@@ -192,7 +186,8 @@ public class EN_Client : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F1))
         {
             GameObject go = Instantiate(EN_NetworkPrefabs.Prefab(EN_PREFABS.Cube), Vector3.zero, Quaternion.identity);
-            go.AddComponent<EN_SyncTransform>();
+            go.AddComponent<EN_SyncTransform>().syncFrameRate = 5;
+            go.GetComponent<EN_SyncTransformClient>().enabled = false;
 
             Vector3 pos = go.transform.position;
             Vector3 rot = go.transform.rotation.eulerAngles;
@@ -231,7 +226,7 @@ public class EN_Client : MonoBehaviour
     {
         while (true)
         {
-            if (udp_client.Available > 0)
+            while(udp_client.Available > 0)
             {
                 byte[] bytes = udp_client.Receive(ref server);
 
@@ -276,12 +271,18 @@ public class EN_Client : MonoBehaviour
             EN_PacketTransform packet = EN_Protocol.BytesToObject<EN_PacketTransform>(bytes);
             Vector3 pos = new Vector3(packet.tX, packet.tY, packet.tZ);
             Quaternion rot = Quaternion.Euler(packet.rX, packet.rY, packet.rZ);
+            Vector3 vel = new Vector3(packet.vX, packet.vY, packet.vZ);
 
             GameObject go = EN_NetworkObject.Find(packet.packet_network_id);
             if (go != null)
             {
-                go.transform.position = pos;
-                go.transform.rotation = rot;
+                go.GetComponent<EN_SyncTransformClient>().Translate(packet.tX, packet.tY, packet.tZ, packet.rX, packet.rY, packet.rZ);
+
+                //go.transform.position = Vector3.Lerp(pos, pos - vel, Time.deltaTime);
+                //go.transform.position = Vector3.Lerp(go.transform.position, pos, Time.deltaTime*10); //, pos + vel, Time.deltaTime); <-- plus velocity to anticipate movement
+
+                //go.transform.position = pos;
+                //go.transform.rotation = rot;
             }
         }
     }
@@ -367,8 +368,10 @@ public class EN_Client : MonoBehaviour
 
         stream = tcp_client.GetStream();
 
-        StartCoroutine(SendUDP(EN_ClientSettings.SEND_INTERVAL));
+        //StartCoroutine(SendUDP(EN_ClientSettings.SEND_INTERVAL));
         StartCoroutine(ReceiveUDP());
+
+
         StartCoroutine(ReceiveTCP());
 
         StartCoroutine(WaitForConnection(1.0f));

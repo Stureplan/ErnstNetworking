@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-using ErnstNetworking.Protocol;
-
 public class EN_NetworkObject : MonoBehaviour 
 {
     public int network_id;

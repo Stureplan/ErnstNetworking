@@ -35,6 +35,7 @@ namespace ErnstNetworking
         int loops = 0;
         int poll_framerate = 100;
 
+
         private string IPConfig(string arg)
         {
             System.Diagnostics.Process cmd = new System.Diagnostics.Process();
@@ -188,7 +189,7 @@ namespace ErnstNetworking
         {
             if (udp_server.Available > 0)
             {
-                if (loops % 100 == 0) { Console.WriteLine(udp_server.Available); }
+                if (loops % 100 == 0) { /*Console.WriteLine(udp_server.Available);*/ }
                 byte[] bytes = udp_server.Receive(ref udp_source); //TODO: If Receive fails again after DC, try {} catch {} and spit it into console
 
                 if (bytes.Length > 0)
